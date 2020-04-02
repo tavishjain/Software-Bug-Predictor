@@ -17,7 +17,7 @@ except ImportError:
     os.system("apt install python3-pip")
     os.system("pip3 install gitpython")
     os.system("pip3 install pandas")
-    subprocess.call("pip3 install openpyxl")
+    os.system("pip3 install openpyxl==3.0.1")
     import git 
     import openpyxl
     import pandas as pd
@@ -134,8 +134,12 @@ deletions.reverse()
 bug.reverse()
 commit_time_diff.reverse()
 
+s = set([len(commit_hash), len(commit_message), len(author), len(date), len(commit_time_diff), len(files_changed), len(insertions), len(deletions), len(bug)])
+if len(s) != 1:
+    sys.exit(os.EX_NOINPUT)
 
-print(len(commit_hash), len(commit_message), len(author), len(date), len(commit_time_diff), len(files_changed), len(insertions), len(deletions), len(bug))
+print("Number of commits found in the repo: ", len(commit_hash))
+# print(len(commit_hash), len(commit_message), len(author), len(date), len(commit_time_diff), len(files_changed), len(insertions), len(deletions), len(bug))
 
 df = pd.DataFrame({'Commit_Hash' : commit_hash,
                     'Author' : author,
@@ -149,16 +153,16 @@ df = pd.DataFrame({'Commit_Hash' : commit_hash,
 df['Date_Time'] = df['Date_Time'].astype(str).str[:-6]
 df.to_excel('whatchanged_data.xlsx')
 
-# for i in range(len(commit_hash)):
+# for i in range(len(commit_hash))
 # for i in range(3):
-    # print("|||||||||||||||||||||||||||||||||| ", i, " |||||||||||||||||||||||||||||||||||||")
-    # print(commit_hash[i])
-    # print(commit_message[i])
-    # print(author[i])
-    # print(date[i])
-    # print(commit_time_diff[i])
-    # print(files_changed[i])
-    # print(file_size_diff[i])
-    # print(insertions[i])
-    # print(deletions[i])
-    # print(bug[i])
+#     print("|||||||||||||||||||||||||||||||||| ", i, " |||||||||||||||||||||||||||||||||||||")
+#     print(commit_hash[i])
+#     print(commit_message[i])
+#     print(author[i])
+#     print(date[i])
+#     print(commit_time_diff[i])
+#     print(files_changed[i])
+#     print(file_size_diff[i])
+#     print(insertions[i])
+#     print(deletions[i])
+#     print(bug[i])

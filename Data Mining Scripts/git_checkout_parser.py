@@ -3,20 +3,6 @@ from datetime import datetime
 from pathlib import Path
 from subprocess import *
 
-def jarWrapper(*args):
-    process = Popen(['java', '-jar'] + list(args), stdout=PIPE, stderr=PIPE)
-    ret = []
-    while process.poll() is None:
-        line = process.stdout.readline()
-        if line != '' and line.endswith('\n'):
-            ret.append(line[:-1])
-    stdout, stderr = process.communicate()
-    ret += stdout.split('\n')
-    if stderr != '':
-        ret += stderr.split('\n')
-    ret.remove('')
-    return ret
-
 try:
     import git
     import xlrd
@@ -62,28 +48,17 @@ actual_size = list()
 
 df = pd.read_excel('whatchanged_data.xlsx')
 
-# os.system('curl -o ckjm.jar https://github.com/mjureczko/CKJM-extended/releases/download/ckjm_ext-2.2/ckjm_ext.jar')
-
-
 for commit in df['Commit_Hash']:
-	# time.sleep(2)
-	os.system('git checkout ' + str(commit))
-	subprocess.call(['java', '-jar', 'ckjm.jar'])
-	# args = ['ckjm.jar'] # Any number of args to be passed to the jar file
-	# result = jarWrapper(*args)
+	size = subprocess.check_output(['du','-sh', '-k', '.']).split()[0].decode('utf-8')
+	actual_size.append(size)
+	if len(size_diff) == 0:
+		size_diff.append(size)
+	else:
+		previous_size = int(actual_size[len(actual_size) - 2])
+		modified_size = int(size) - previous_size
+		size_diff.append(modified_size)
 
-	# ans = subprocess.check_output(['java', '-jar', 'ckjm.jar'])
-	# print(result)
-	# size = subprocess.check_output(['du','-sh', '-k', '.']).split()[0].decode('utf-8')
-	# actual_size.append(size)
-	# if len(size_diff) == 0:
-	# 	size_diff.append(size)
-	# else:
-	# 	previous_size = int(actual_size[len(actual_size) - 2])
-	# 	modified_size = int(size) - previous_size
-	# 	size_diff.append(modified_size)
+print("Size of modification: ", len(size_diff), "\n")
 
-print(len(size_diff), "\n")
-
-for i in range(len(size_diff)):
-	print(size_diff[i])
+# for i in range(len(size_diff)):
+	# print(size_diff[i])
