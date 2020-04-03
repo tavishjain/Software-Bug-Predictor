@@ -12,13 +12,13 @@
 # =====================DIRECTORY CLEANING DONE===========================
 
 # 0. Pre-processing steps
-# 	path = <<pwd>>
+# 	path = <<pwd of home dir>>
 # Make a shortcut of the und executable on the current location 
 # 	ln -s path/scitools/bin/linux64/und .
 
 
 # 1. Create new project
-# 	./und create -languages Java <<name>>.udb
+# 	./und create -db <<name>>.udb -languages Java
 
 # 2. Add files
 # 	./und add path
@@ -29,9 +29,14 @@
 
 # 4. Set commands for output
 # 	./und analyze
-# 	./und report
 # 	./und metrics
 
+# Save stuff in common repo
+# ./Dir|
+#      |-> parent_dir|
+#                    |-> scitools
+#                    |-> (Cloned Repo)
+# ./scitools/bin/linux64/und
 import optparse, sys, os
 
 parser  =   optparse.OptionParser()
@@ -46,9 +51,33 @@ else:
 parent_dir = os.getcwd()
 
 repo_location = str(path)
+# os.system("cp commands.txt " + repo_location + "/commands.txt")
 os.chdir(repo_location)
+# os.system("cp " + parent_dir + "/commands.txt commands.txt")
 
-os.system("find . -iname '*.java' -exec cp \{\} ./ \;")
-os.system("rm -r */")
-os.system("find . -type f ! -name '*.java' -delete")
-print("		Directory Cleaning Done !!!")
+# os.system("find . -iname ('*.java' '*.txt') -exec cp \{\} ./ \;")
+# os.system("rm -r */")
+# os.system("find . -type f ! -name ('*.java' '*.txt') -delete")
+
+# os.system("find . -iname '*.java' -exec cp \{\} ./ \;")
+# os.system("rm -r */")
+# os.system("find . -type f ! -name '*.java' -delete")
+os.system("cp " + parent_dir + "/commands.txt commands.txt")
+print("\n=> Directory Cleaning Done !!!")
+
+path_of_und = parent_dir + "/scitools/bin/linux64/und"
+os.system("ln -s " + path_of_und)
+
+print("\n=> Starting metrics generation !!!")
+os.system("./und commands.txt")
+
+# os.system("./und create -db -languages Java " + path + ".udb")
+# os.system("./und open " + path + ".udb")
+
+# os.system("./und add .")
+ 
+# os.system("./und settings –metrics all")
+# os.system("./und settings –metricsOutputFile " + path + "/metrics.csv")
+
+# os.system("./und analyze")
+# os.system("./und metrics")

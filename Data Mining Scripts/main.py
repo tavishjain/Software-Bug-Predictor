@@ -17,7 +17,7 @@ if (path.split("/"))[-1] == '':
 else:
 	path = (path.split("/"))[-1]
 
-print("=========== Running WHATCHANGED script ===========")
+print("\n=========== Running WHATCHANGED script ===========")
 os.system("python3 git_whatchanged_parser.py " + path)
 
 print("\n=========== Running CHECKOUT script ===========")

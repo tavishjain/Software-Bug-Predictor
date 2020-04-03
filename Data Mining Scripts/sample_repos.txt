@@ -2,6 +2,6 @@ Check out the repo's from android.googlesource.com
 Some of the Sample tested include 
 1. Calender (https://android.googlesource.com/platform/packages/apps/Calendar/)
 2. Camera2 (https://android.googlesource.com/platform/packages/apps/Camera2/)
-3. Popbuzz (https://github.com/tavisjain/Popbuzz)
+3. Popbuzz (https://github.com/tavishjain/Popbuzz)
 
 

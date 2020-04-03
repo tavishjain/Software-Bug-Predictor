@@ -39,9 +39,7 @@ g = git.Git(os.getcwd())
 # 5. commit message                    - in git_whatchanged_parser.py and dataframe
 # 6. Commit time difference            - in git_whatchanged_parser.py and dataframe
 # 7. Size of modification              - done - in size_diff
-# 8. Module entropy                    - 
-# 9. number of defects in previous     - 
-# 10. metrics                     - 
+# 8. metrics                     - 
 
 size_diff = list()
 actual_size = list()

@@ -1,0 +1,9 @@
+create -languages Java project.udb
+
+settings -metrics all project.udb
+settings -metricsOutputFile ./metrics.csv project.udb
+
+add . project.udb
+
+analyze project.udb
+metrics project.udb
