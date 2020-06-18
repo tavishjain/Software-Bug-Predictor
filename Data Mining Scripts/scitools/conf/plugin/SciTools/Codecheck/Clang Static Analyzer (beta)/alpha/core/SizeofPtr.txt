@@ -1,0 +1,1 @@
+(C) Warn about unintended use of sizeof() on pointer expressions.

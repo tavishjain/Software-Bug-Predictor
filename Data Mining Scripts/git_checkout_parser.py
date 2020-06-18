@@ -47,14 +47,15 @@ actual_size = list()
 df = pd.read_excel('whatchanged_data.xlsx')
 
 for commit in df['Commit_Hash']:
-	size = subprocess.check_output(['du','-sh', '-k', '.']).split()[0].decode('utf-8')
-	actual_size.append(size)
-	if len(size_diff) == 0:
-		size_diff.append(size)
-	else:
-		previous_size = int(actual_size[len(actual_size) - 2])
-		modified_size = int(size) - previous_size
-		size_diff.append(modified_size)
+    # print('Covering Commit #', commit)
+    size = subprocess.check_output(['du','-sh', '-k', '.']).split()[0].decode('utf-8')
+    actual_size.append(size)
+    if len(size_diff) == 0:
+        size_diff.append(size)
+    else:
+        previous_size = int(actual_size[len(actual_size) - 2])
+        modified_size = int(size) - previous_size
+        size_diff.append(modified_size)
 
 print("Size of modification: ", len(size_diff), "\n")
 

@@ -18,22 +18,22 @@
 
 
 # 1. Create new project
-# 	./und create -db <<name>>.udb -languages Java
+# 	./scitools/bin/linux64/und create -db <<name>>.udb -languages Java
 
 # 2. Add files
-# 	./und add path
+# 	./scitools/bin/linux64/und add path
  
 # 3. Set the metrics to be generated to all and specify the path for output csv
-#	./und settings –metrics all
-# 	./und settings –metricsOutputFile path/metrics.csv
+#	./scitools/bin/linux64/und settings –metrics all
+# 	./scitools/bin/linux64/und settings –metricsOutputFile path/metrics.csv
 
 # 4. Set commands for output
-# 	./und analyze
-# 	./und metrics
+# 	./scitools/bin/linux64/und analyze
+# 	./scitools/bin/linux64/und metrics
 
 # Save stuff in common repo
 # ./Dir|
-#      |-> parent_dir|
+#      |->e parent_dir|
 #                    |-> scitools
 #                    |-> (Cloned Repo)
 # ./scitools/bin/linux64/und
@@ -59,9 +59,11 @@ os.chdir(repo_location)
 # os.system("rm -r */")
 # os.system("find . -type f ! -name ('*.java' '*.txt') -delete")
 
-# os.system("find . -iname '*.java' -exec cp \{\} ./ \;")
-# os.system("rm -r */")
-# os.system("find . -type f ! -name '*.java' -delete")
+#Cleaning all files and extracting .java files to main folder, dleeting rest
+os.system("find . -iname '*.java' -exec cp \{\} ./ \;")
+os.system("rm -r */")
+os.system("find . -type f ! -name ['*.java', '*.xlsx'] -delete")
+
 os.system("cp " + parent_dir + "/commands.txt commands.txt")
 print("\n=> Directory Cleaning Done !!!")
 
@@ -69,15 +71,15 @@ path_of_und = parent_dir + "/scitools/bin/linux64/und"
 os.system("ln -s " + path_of_und)
 
 print("\n=> Starting metrics generation !!!")
-os.system("./und commands.txt")
+os.system("./scitools/bin/linux64/und commands.txt")
 
-# os.system("./und create -db -languages Java " + path + ".udb")
-# os.system("./und open " + path + ".udb")
+# os.system("./scitools/bin/linux64/und create -db -languages Java " + path + ".udb")
+# os.system("./scitools/bin/linux64/und open " + path + ".udb")
 
-# os.system("./und add .")
+# os.system("./scitools/bin/linux64/und add .")
  
-# os.system("./und settings –metrics all")
-# os.system("./und settings –metricsOutputFile " + path + "/metrics.csv")
+# os.system("./scitools/bin/linux64/und settings –metrics all")
+# os.system("./scitools/bin/linux64/und settings –metricsOutputFile " + path + "/metrics.csv")
 
-# os.system("./und analyze")
-# os.system("./und metrics")
+# os.system("./scitools/bin/linux64/und analyze")
+# os.system("./scitools/bin/linux64/und metrics")

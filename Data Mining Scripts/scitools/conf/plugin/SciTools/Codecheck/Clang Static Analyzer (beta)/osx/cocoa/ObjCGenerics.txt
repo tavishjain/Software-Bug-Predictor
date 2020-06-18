@@ -1,0 +1,1 @@
+(ObjC) Check for type errors when using Objective-C generics.

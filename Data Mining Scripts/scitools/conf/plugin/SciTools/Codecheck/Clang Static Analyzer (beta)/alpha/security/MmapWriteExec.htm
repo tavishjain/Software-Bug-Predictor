@@ -1,0 +1,11 @@
+<p><b>1.2.7.4. alpha.security.MmapWriteExec (C)</b><br>
+Warn on mmap() calls that are both writable and executable.</p>
+<p>Examples:
+<pre><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">test</span><span class="p">(</span><span class="kt">int</span> <span class="n">n</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kt">void</span> <span class="o">*</span><span class="n">c</span> <span class="o">=</span> <span class="n">mmap</span><span class="p">(</span><span class="nb">NULL</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="n">PROT_READ</span> <span class="o">|</span> <span class="n">PROT_WRITE</span> <span class="o">|</span> <span class="n">PROT_EXEC</span><span class="p">,</span>
+                 <span class="n">MAP_PRIVATE</span> <span class="o">|</span> <span class="n">MAP_ANON</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+  <span class="c1">// warn: Both PROT_WRITE and PROT_EXEC flags are set. This can lead to</span>
+  <span class="c1">//       exploitable memory regions, which could be overwritten with malicious</span>
+  <span class="c1">//       code</span>
+<span class="p">}</span>
+</pre></div></pre></p>

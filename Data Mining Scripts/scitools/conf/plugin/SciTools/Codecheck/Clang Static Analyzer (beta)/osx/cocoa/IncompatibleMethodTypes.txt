@@ -1,0 +1,1 @@
+(ObjC) Warn about Objective-C method signatures with type incompatibilities.

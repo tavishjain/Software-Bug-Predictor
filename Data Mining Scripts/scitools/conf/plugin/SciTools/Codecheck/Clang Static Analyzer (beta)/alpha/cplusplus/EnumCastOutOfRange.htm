@@ -1,0 +1,12 @@
+<p><b>1.2.3.2. alpha.cplusplus.EnumCastOutOfRange (C++)</b><br>
+Check for integer to enumeration casts that could result in undefined values.</p>
+<p>Examples:
+<pre><div class="highlight"><pre><span></span><span class="k">enum</span> <span class="n">TestEnum</span> <span class="p">{</span>
+  <span class="n">A</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="p">};</span>
+
+<span class="kt">void</span> <span class="nf">foo</span><span class="p">()</span> <span class="p">{</span>
+  <span class="n">TestEnum</span> <span class="n">t</span> <span class="o">=</span> <span class="k">static_cast</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span>
+      <span class="c1">// warn: the value provided to the cast expression is not in</span>
+               <span class="n">the</span> <span class="n">valid</span> <span class="n">range</span> <span class="n">of</span> <span class="n">values</span> <span class="k">for</span> <span class="n">the</span> <span class="k">enum</span>
+</pre></div></pre></p>

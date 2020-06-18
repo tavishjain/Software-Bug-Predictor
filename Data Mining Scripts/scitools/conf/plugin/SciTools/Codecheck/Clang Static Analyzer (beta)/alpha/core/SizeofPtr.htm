@@ -1,0 +1,10 @@
+<p><b>1.2.2.10. alpha.core.SizeofPtr (C)</b><br>
+Warn about unintended use of <code class="docutils literal notranslate"><span class="pre">sizeof()</span></code> on pointer expressions.</p>
+<p>Examples:
+<pre><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">s</span> <span class="p">{};</span>
+
+<span class="kt">int</span> <span class="nf">test</span><span class="p">(</span><span class="k">struct</span> <span class="n">s</span> <span class="o">*</span><span class="n">p</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
+    <span class="c1">// warn: sizeof(ptr) can produce an unexpected result</span>
+<span class="p">}</span>
+</pre></div></pre></p>

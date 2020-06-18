@@ -20,8 +20,8 @@ else:
 print("\n=========== Running WHATCHANGED script ===========")
 os.system("python3 git_whatchanged_parser.py " + path)
 
-print("\n=========== Running CHECKOUT script ===========")
-os.system("python3 git_checkout_parser.py " + path)
+# print("\n=========== Running CHECKOUT script ===========")
+# os.system("python3 git_checkout_parser.py " + path)
 
 print("\n=========== Collecting Metrics Data ===========")
 os.system("python3 understand_metrics_parser.py " + path)

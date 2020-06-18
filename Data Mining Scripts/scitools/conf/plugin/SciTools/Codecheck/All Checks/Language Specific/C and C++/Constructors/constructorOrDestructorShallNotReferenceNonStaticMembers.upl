@@ -1,0 +1,207 @@
+#This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson
+
+# Boiler Plate code
+use base ("Understand::Codecheck");
+use strict;
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => 'Function-try-block in Constructor or destructor referencing non static members from class or base';
+
+# This registers ERR1 with Understand
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+# This is the short error the Understand will use
+
+sub checkID { return "CPP_C005";}
+
+sub name { return "Handlers of a function-try-block implementation of a class constructor or destructor shall not reference nonstatic members from this class or its bases";}
+
+# This is the full description of the rule being tested
+sub description { return "Handlers of a function-try-block implementation of a class constructor or destructor shall not reference nonstatic members from this class or its bases.";}
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description { return <<"END_DESC"
+<p><b>Rationale</b><br>
+The effect of accessing a non-static member of a class or a base class in the handler (i.e. the <i>catch</i>
+part) of a <i>function-try-block</i> of a class constructor/destructor is undefined.</p>
+<br>
+<p>
+For example, if a memory allocation exception is thrown during creation of the object, the object
+will not exist when the handler attempts to access its members. Conversely, in the destructor, the
+object may have been successfully destroyed before the exception is handled, so again will not be
+available to the handler.</p>
+<br>
+<p>
+By contrast, the lifetime of a static member is greater than that of the object itself, so the static
+member is guaranteed to exist when the handler accesses it.</p>
+<br>
+<b>Example</b><pre style="margin-top:0;padding-top:0;">
+For the majority of programs this will mean main should look like:
+  class C
+  {
+  public:
+    int32_t x;
+    C ( )
+      try
+      {
+        // Action that may raise an exception
+      }
+      catch ( ... )
+      {
+        if ( 0 == x ) // Non-compliant – x may not exist at this point
+        {
+          // Action dependent on value of x
+        }
+      }
+    ~C ( )
+      try
+      {
+        // Action that may raise an exception
+      }
+      catch ( ... )
+      {
+        if ( 0 == x ) // Non-compliant – x may not exist at this point
+        {
+          // Action dependent on value of x
+        }
+      }
+  };
+</pre>
+END_DESC
+}
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+# This determines if this script is per file
+sub test_entity { return 1;}
+
+# This determines if this script is per project or per file
+sub test_global { return 0;}
+
+# Any defined options go here
+sub define_options{}
+
+
+# This is the actual test being performed on the user's code
+sub check {
+
+  # Pull the name of the check and the name of the file from the incoming script request
+  my $check = shift; 
+  my $file = shift;
+  return unless $file->kind->check( 'C File' );
+  
+  # Create a list of all classes that are defined
+  my @functionsDefined = $file->filerefs( 'C Define', 'C Member Function',1 );
+  return unless @functionsDefined;
+  
+  # Loop through each class looking for the try command
+  foreach my $constructor ( @functionsDefined ) {
+
+    # Check to see if this memeber is a constructor or destructor
+    my $class = $constructor->scope;
+    my $ent = $constructor->ent;
+    next if !checkConstructorOrDestructor( $class, $ent );
+
+    # Pull text of function and skip if there isn't a try catch block present
+    my $text = $ent->contents;
+    # Remove any // style comments
+    $text =~ s/\/\/.*?\n/\n/g;
+    # Remove any /* */ style comments
+    $text =~ s/\/\*.*?\*\//\n/gs;
+    next unless $text =~ /catch/;
+
+    my @nonStaticMembers = getAllMemberObjects( $ent );
+
+    # Walk through funtion
+    my $lexeme = $constructor->lexeme;
+    my $end = $constructor->ent->ref( 'end' )->line;
+
+  	while ( $lexeme->line_begin <= $end ) {
+
+      # Keep track of location relative to catch block with simple counter
+      if ( $lexeme->text eq "catch" ) {
+        
+        my $isBlock = 1;
+
+        # Move forward so we don't double count
+        while ( $lexeme->line_begin <= $end ) {
+          last if $lexeme->text eq '{';
+          $lexeme = $lexeme->nextUseful          
+        }
+
+        while ( $isBlock and $lexeme->line_begin <= $end ) {
+
+          $isBlock++ if $lexeme->text eq '{';
+          $isBlock-- if $lexeme->text eq '}';
+
+          # Throw error if we're inside a catch block and we encounter a non static member
+          if ( $lexeme->ent and grep { $_->uniquename eq $lexeme->ent->uniquename } @nonStaticMembers ) {
+            $check->violation( $ent, $constructor->file, $lexeme->line_begin, $lexeme->column_begin, ERR1, $ent->name );
+          }
+
+          $lexeme = $lexeme->nextUseful;
+        }
+      }
+      $lexeme = $lexeme->nextUseful;
+    }
+  }
+}
+
+
+# check if ent is a constructor or destructor
+sub checkConstructorOrDestructor {
+    my $class = shift;
+    my $ent = shift;
+    return ( ( $class->name() eq $ent->name() ) or ( $ent->name() eq '~' . $class->name() ) );
+}
+
+
+# Get complete member list
+sub getAllMemberObjects {
+
+  my $ent = shift;
+  my @listBase;
+  my @listMember;
+
+  # Create a list of all classes and subsequent base classes
+  while( $ent ) {
+    push @listBase, $ent;
+    $ent = $ent->ents( 'Base' );
+  }
+
+  # Add each class' member objects to a list
+  foreach my $base ( @listBase ) {
+    push @listMember, getMemberObjects( $base );
+  }
+
+  return @listMember;
+}
+
+
+# Return the list of member objects that cannot be referenced
+sub getMemberObjects {
+
+  my $ent = shift;
+  my @list;
+  my $parent = $ent->parent() or return @list;
+
+  # Get all non static members
+  foreach my $ent ( $parent->ents( 'C Define', 'C Member Object ~Static' ) ) {
+    push @list, $ent;
+
+    # Add any functions that may return those non static members
+    if ( $ent->ents( 'Return' ) ) {
+      push @list, $ent->ents( 'Return' );
+    }
+  }
+
+  return @list;
+}

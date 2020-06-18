@@ -5,3 +5,10 @@ Some of the Sample tested include
 3. Popbuzz (https://github.com/tavishjain/Popbuzz)
 
 
+
+// To download understand metrics SDK
+// Downlaod tar here first: https://scitools.com/download/all-builds/
+tar -xvzf Understand-4.0.800-Linux-64bit.tgz
+cd scitools/bin/linux64
+./understand
+export PATH=$PATH:/home/tavishjain/scitools/bin/linux64

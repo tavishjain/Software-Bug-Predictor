@@ -1,0 +1,1 @@
+(C) Check for calls to blocking functions inside a critical section. Applies to.

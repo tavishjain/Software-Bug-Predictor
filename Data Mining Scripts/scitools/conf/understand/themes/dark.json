@@ -1,0 +1,185 @@
+{
+    "display-name":      "Dark Theme",
+    "description":       "The official dark theme supported by Scientific Toolworks, Inc.",
+    "defaults": {
+        "explanation":     "Colors are grouped by background. Variants such as active, inactive, and disabled are optional.",
+        "group-1": {
+            "background":    "#1e1e1e",
+            "accent-1":      "#0085c7",
+            "accent-1-text": "#f8fbfe",
+            "border":        "#f8f8f8",
+            "error":         "#ff0000",
+            "link":          "#0085c7",
+            "link-visited":  "#8d1aff",
+            "placeholder":   "#989898",
+            "text":          "#dedede",
+            "warning":       "#ffae42"
+        },
+        "group-2": {
+            "background":    "#323232",
+            "border":        "#f8f8f8",
+            "accent-1":      "#0085c7",
+            "accent-1-text": "#f8fbfe",
+            "tab":           "#1e1e1e",
+            "tab-text":      "#f8fbfe",
+            "text":          "#dedede"
+        },
+        "group-3": {
+            "background":    "#2a2a2a",
+            "text":          {"active": "#999999", "disabled": "#949494", "inactive": "#949494"},
+            "accent-1":      "#0085c7",
+            "toggled":       "#252525"
+        },
+        "group-4": {
+            "background":    "#323232",
+            "border":        "#7f7f7f",
+            "text":          {"active": "#dedede", "disabled": "#b4b1b1"},
+            "accent-1":      "#0085c7"
+        }
+    },
+    "editor": {
+        "explanation":     "Editor descriptions can be found at scintilla.org",
+        "brace-bad": {
+            "background":    "#8a0000",
+            "bold":           true,
+            "foreground":    "#bababa"
+        },
+        "brace-light": {
+            "background":    "#006100",
+            "bold":           true,
+            "foreground":    "#bababa"
+        },
+        "caret": {
+            "background":    "#3a3a3a"
+        },
+        "class": {
+            "underline":      true
+        },
+        "comment": {
+            "foreground":    "#92ff2c",
+            "italic":         true
+        },
+        "deadcode": {
+            "background":    "#101010"
+        },
+        "default": {
+            "background":    "#1e1e1e",
+            "foreground":    "#dedede"
+        },
+        "doc-comment": {
+            "foreground":    "#993300",
+            "italic":         true
+        },
+        "doc-keyword": {
+            "bold":           true,
+            "foreground":    "#663300",
+            "italic":         true
+        },
+        "double-quoted-string": {
+            "foreground":    "#41aa11"
+        },
+        "enumerator": {
+            "foreground":    "#006dff"
+        },
+        "error": {
+            "background":    "#ff0000",
+            "eol-filled":     true,
+            "foreground":    "#ffff00"
+        },
+        "find": {
+            "background":    "#00f3f3"
+        },
+        "fold-margin": {
+            "background":    "#323232"
+        },
+        "function": {
+            "foreground":    "#fc4120"
+        },
+        "global-variable": {
+            "bold":           true,
+            "foreground":    "#00a9c3"
+        },
+        "identifier": {
+            "foreground":    "#54a2ad"
+        },
+        "inactive": {
+            "background":    "#450505",
+            "eol-filled":     true
+        },
+        "keyword": {
+            "bold":           true,
+            "foreground":    "#ff007f"
+        },
+        "label": {
+            "foreground":    "#800000"
+        },
+        "linenumber": {
+            "background":    "#2a2a2a",
+            "foreground":    "#dedede"
+        },
+        "local-variable": {
+            "foreground":    "#00a9c3"
+        },
+        "macro": {
+            "bold":           true,
+            "foreground":    "#008000"
+        },
+        "member-function": {
+            "foreground":    "#fc4120",
+            "italic":         true
+        },
+        "member-variable": {
+            "foreground":    "#00a9c3",
+            "italic":         true
+        },
+        "number": {
+            "foreground":    "#00d0ff"
+        },
+        "operator": {
+            "bold":           true
+        },
+        "parameter": {
+            "foreground":    "#00c3ac"
+        },
+        "preprocessor": {
+            "bold":           true,
+            "foreground":    "#dbc900"
+        },
+        "ref": {
+            "background":    "#74f000"
+        },
+        "selection": {
+            "background":    "#4d4d4d",
+            "eol-filled":     true
+        },
+        "single-quoted-string": {
+            "foreground":    "#41aa11"
+        },
+        "type": {
+            "underline":      true
+        },
+        "unclosed-double-quoted-string": {
+            "background":    "#800000",
+            "eol-filled":     true
+        },
+        "unclosed-single-quoted-string": {
+            "background":    "#800000",
+            "eol-filled":     true
+        },
+        "virtual-function": {
+            "bold":           true,
+            "foreground":    "#fc4120",
+            "italic":         true
+        },
+        "whitespace": {
+            "foreground":    "#808080"
+        }
+    },
+    "other": {
+        "play-button":     "#89D185",
+        "shadow":          "#000000",
+        "status-text":     "#c383cf",
+        "tab-text":        {"active": "#dedede", "out-of-project": "#b4b1b1", "unresolved": "#b4b1b1"},
+        "unused":          "#fc28fc"
+    }
+}

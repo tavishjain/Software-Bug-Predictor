@@ -1,0 +1,1 @@
+(C) Check that addresses to stack memory do not escape the function.

@@ -1,0 +1,70 @@
+    <script>
+      var SCRIPT_FIGURE = {
+          "layout": {
+              "autosize": true, 
+              "yaxis": {
+                  "zerolinewidth": 1, 
+                  "tickmode": "auto", 
+                  "title": "Y_TEXT_LABEL", 
+                  "autorange": true, 
+                  "tickangle": "auto", 
+                  "ticks": "outside", 
+                  "gridwidth": 3, 
+                  "showgrid": true, 
+                  "range": [
+                      0, 
+                      58186.31578947369
+                  ], 
+                  "mirror": false, 
+                  "zeroline": false, 
+                  "showline": true, 
+                  "linewidth": 1, 
+                  "type": "linear", 
+                  "side": "left", 
+                  "exponentformat": "none"
+              }, 
+              "title": "BAR_TITLE_TEXT ", 
+                "titlefont" : {
+                    "size" : 20
+                },
+              "showlegend": MUITIBAR_LEGEND, 
+              "width": (window.innerWidth /2) -25,
+              "margin": {"l": MARGIN_LEFT, "t": 50},
+              "height": (window.innerWidth /2) -20,
+              "xaxis": {
+                  "zerolinewidth": 1, 
+                  "tickmode": "auto", 
+                  "title": "Click to enter X axis title", 
+                  "autorange": true, 
+                  "tickangle": 30, 
+                  "ticks": "outside", 
+                  "gridwidth": 3, 
+                  "dtick": 1, 
+                  "showgrid": true, 
+                  "fixedrange": true, 
+                  "range": [
+                      -0.5, 
+                      11.5
+                  ], 
+                  "mirror": false, 
+                  "zeroline": false, 
+                  "showline": true, 
+                  "linewidth": 1, 
+                  "type": "category", 
+                  "side": "bottom"
+              }, 
+              "hovermode": "x", 
+              "bargroupgap": 0.05, 
+              "legend": {
+                  "y": 0.7999999999999998, 
+                  "x": 1.06, 
+                  "traceorder": "normal", 
+                  "orientation": "v"
+              }
+              MULTI_BAR_CHART_STACK
+          }, 
+          "data": [
+              MULTI_BAR_CHART_DATA
+          ]
+      }
+    </script>

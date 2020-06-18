@@ -1,0 +1,13 @@
+<p><b>1.1.1.7. core.VLASize (C)</b><br>
+Check for declarations of Variable Length Arrays of undefined or zero size.</p>
+<p>Examples:
+<pre><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">test</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kt">int</span> <span class="n">x</span><span class="p">;</span>
+  <span class="kt">int</span> <span class="n">vla1</span><span class="p">[</span><span class="n">x</span><span class="p">];</span> <span class="c1">// warn: garbage as size</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="nf">test</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kt">int</span> <span class="n">x</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+  <span class="kt">int</span> <span class="n">vla2</span><span class="p">[</span><span class="n">x</span><span class="p">];</span> <span class="c1">// warn: zero size</span>
+<span class="p">}</span>
+</pre></div></pre></p>

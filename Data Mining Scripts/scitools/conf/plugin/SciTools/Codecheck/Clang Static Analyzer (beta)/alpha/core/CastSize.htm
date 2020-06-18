@@ -1,0 +1,7 @@
+<p><b>1.2.2.2. alpha.core.CastSize (C)</b><br>
+Check when casting a malloc'ed type <code class="docutils literal notranslate"><span class="pre">T</span></code>, whether the size is a multiple of the size of <code class="docutils literal notranslate"><span class="pre">T</span></code>.</p>
+<p>Examples:
+<pre><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">test</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kt">int</span> <span class="o">*</span><span class="n">x</span> <span class="o">=</span> <span class="p">(</span><span class="kt">int</span> <span class="o">*</span><span class="p">)</span> <span class="n">malloc</span><span class="p">(</span><span class="mi">11</span><span class="p">);</span> <span class="c1">// warn</span>
+<span class="p">}</span>
+</pre></div></pre></p>

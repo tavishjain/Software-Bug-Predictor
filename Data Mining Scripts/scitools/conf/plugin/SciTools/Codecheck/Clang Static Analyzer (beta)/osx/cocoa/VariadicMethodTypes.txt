@@ -1,0 +1,1 @@
+(ObjC) Check for passing non-Objective-C types to variadic collection initialization methods that expect only Objective-C types.

@@ -1,0 +1,1 @@
+(C) Warn on uses of inferior random number generating functions (only if arc4random function is available).

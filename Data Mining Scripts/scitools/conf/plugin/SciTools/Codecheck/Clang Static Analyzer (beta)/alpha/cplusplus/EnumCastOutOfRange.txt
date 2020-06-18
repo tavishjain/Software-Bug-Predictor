@@ -1,0 +1,1 @@
+(C++) Check for integer to enumeration casts that could result in undefined values.

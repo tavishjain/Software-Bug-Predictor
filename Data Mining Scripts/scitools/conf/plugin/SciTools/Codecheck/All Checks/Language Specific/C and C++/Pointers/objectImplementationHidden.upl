@@ -1,0 +1,188 @@
+# This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson
+# 9-21-16
+
+
+# Boiler Plate code
+use base ("Understand::Codecheck");
+use strict;
+
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => 'Pointer %1 is not dereferenced in this translation unit, but implementation of %2 is visible.';
+
+
+# This registers ERR1 with Understand
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+
+# This is the short error the Understand will use
+
+sub checkID { return "CPP_P001";}
+
+sub name { 
+  return 'If a pointer to a structure or union is never dereferenced within a translation unit, then the implementation of the object should be hidden';
+}
+
+
+# This is the full description of the rule being tested
+sub description { 
+  return '( Advisory ) If a pointer to a structure or union is never dereferenced within a translation unit, then the implementation of the object should be hidden.';
+}
+
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description { return <<"END_DESC"
+
+<p><b>Amplification</b><br>
+The implementation of an object should be hidden by means of a pointer to an incomplete type.
+</p>
+
+<p><b>Rationale</b><br>
+If a pointer to a structure or union is never dereferenced, then the implementation details of the
+object are not needed and its contents should be protected from unintentional changes.
+</p>
+
+<p>
+Hiding the implementation details creates an opaque type which may be referenced via a pointer but
+whose contents may not be accessed.
+</p>
+
+<p><b>Example</b><br>
+</p>
+
+<pre style="margin-top:0;padding-top:0;">
+
+  /* Opaque.h */
+  # ifndef OPAQUE_H
+  #define OPAQUE_H
+  typedef struct OpaqueType *pOpaqueType;
+  #endif
+
+  /* Opaque.c */
+  #include "Opaque.h"
+  struct OpaqueType
+  {
+    /* Object implementation */
+  };
+
+  /* UseOpaque.c */
+  #include "Opaque.h"
+  void f ( void )
+  {
+    pOpaqueType pObject;
+    pObject = GetObject ( ); /* Get a handle to an OpaqueType object */
+    UseObject ( pObject ); /* Use it... */
+  }
+
+</pre>
+
+END_DESC
+
+}
+
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+
+# This determines if this script is per file
+sub test_entity { 
+  return 1;
+}
+
+
+# This determines if this script is per project or per file
+sub test_global { 
+  return 0;
+}
+
+
+# Any defined options go here
+sub define_options {
+
+}
+
+
+sub check {
+
+  # Pull the check and file from calling function, return unless file
+  my $check = shift;
+  my $file = shift;
+  return unless $file->kind->check ( 'C File' );
+
+  # Create a hash reference to store all files for this translation unit
+  my $filesToCheck = {};
+  $filesToCheck = buildTranslationUnit( $file, $filesToCheck );
+
+  # Pull a list of all object used in this file
+  my @objectsUsed = $file->filerefs ( 'C', 'C Object ~Static', 1 );
+  return unless @objectsUsed;
+
+  foreach my $object( @objectsUsed ) {
+
+    # Filter anything that isn't a pointer
+    my $pointerType = checkPointerType( $object->ent );
+    next unless $pointerType;
+
+    # Filter anything that's a pointer to a primitive type
+    my $pointedTo = $pointerType->ref( 'C Typed' );
+    next unless $pointedTo;
+
+    # Filter anything that is dereferenced and thus exempt from this check
+    next if scalar( $object->ent->refs( 'C Deref' ) > 0 );
+
+    # Throw violation violation if the parent type is defined in our translation unit.
+    # Safty check in case the project isn't properly defined.
+    my $define = $pointedTo->ent->ref( 'C Definein' );
+    next unless $define;
+    $check->violation( $object->ent, $object->file, $object->line, $object->column, ERR1, $object->ent->name, $define->ent->name ) if exists $$filesToCheck{ $define->ent->uniquename };
+    
+  }
+}
+
+
+# Return true if entity type is a pointer type.
+sub checkPointerType {
+
+    my $ent = shift;
+
+    # Return entity if this is a pointer, ignoring arrays
+    return 0 if !$ent;
+    return $ent if $ent->type() =~ m/\w\s?\*/;
+
+    # Get base type and call recursively
+    my $type_ent = $ent->ents( 'typed', 'typedef' );
+    return 0 if !$type_ent;
+    return 0 if $type_ent == $ent; # hack for parse problem before b273
+
+    return checkPointerType( $type_ent );
+
+}
+
+
+# This recursive function builds my translation unit
+sub buildTranslationUnit {
+
+  # Pull information from upper level and add this file to the hash to signify it has been checked
+  my $file = shift;
+  my $filesToCheck = shift;
+  $filesToCheck->{ $file->uniquename } = $file;
+
+  # Pull all files that this file include and recursivly check
+  my @includedFiles = $file->filerefs( 'Include' );
+  INC : foreach my $include ( @includedFiles ) {
+
+    # Skip this file if it has already been checked
+    next INC if exists $$filesToCheck{ $include->ent->uniquename };
+    $filesToCheck = buildTranslationUnit( $include->ent, $filesToCheck );
+
+  }
+  return $filesToCheck;
+}

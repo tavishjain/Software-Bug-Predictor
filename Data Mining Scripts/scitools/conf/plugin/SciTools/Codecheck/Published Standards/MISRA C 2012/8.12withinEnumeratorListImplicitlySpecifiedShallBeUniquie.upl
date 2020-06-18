@@ -1,0 +1,174 @@
+# This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson
+# 1-22-15
+
+
+# Boiler Plate code
+use base ( 'Understand::Codecheck' );
+use strict;
+
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => 'Implicit values and Explicitly values for this enumeration overlap';
+
+
+# This registers ERR1 with Understand
+sub register_tr_text {
+
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+
+}
+
+sub checkID { return "MISRA12_8.12";}
+
+
+
+# This is the short error the Understand will use
+sub name{
+  return '8.12 Within an enumerator list, the value of an implicitly-specified enumeration constant shall be unique';
+}
+
+
+# This is the full description of the rule being tested
+sub description {
+  return '8.12 ( Required ) Within an enumerator list, the value of an implicitly-specified enumeration constant shall be unique.';
+}
+
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description {
+  return  <<"END_DESC"
+
+<p><b>Rationale</b><br>
+An implicitly-specified enumeration constant has a value 1 greater than its predecessor. If the first
+enumeration constant is implicitly-specified then its value is 0.
+</p>
+
+<p>
+An explicitly-specified enumeration constant has the value of the associated constant expression.
+</p>
+
+<p>
+If implicitly-specified and explicitly-specified constants are mixed within an enumeration list, it is
+possible for values to be replicated. Such replication may be unintentional and may give rise to
+unexpected behaviour.
+</p>
+
+<p>
+This rule requires that any replication of enumeration constants be made explicit, thus making the
+intent clear.
+</p>
+
+<p><b>Example</b><br>
+In the following examples the green and yellow enumeration constants are given the same value.
+</p>
+
+<pre style="margin-top:0;padding-top:0;">
+
+  /* Non-compliant - yellow replicates implicit green */
+  enum colour { red = 3, blue, green, yellow = 5 };
+  /* Compliant                                        */
+  enum colour { red = 3, blue, green = 5, yellow = 5 };
+
+</pre>
+
+END_DESC
+}
+
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language eq "C++";
+}
+
+
+# This determines if this script is run per file
+sub test_entity {
+  return 1;
+}
+
+
+# This determines if this script is run on the whole project
+sub test_global {
+  return 0;
+}
+
+
+# Any defined options go here
+sub define_options {
+}
+
+
+# This is the actual test being performed on the user's code
+sub check {
+
+  # Pull the name of the check and the name of the file from the incoming script request
+  my $check = shift; 
+  my $file = shift;
+  return unless $file->kind->check( 'C File' );
+
+  # Pull all enums and loop
+  my @enumsDefined = $file->filerefs( 'C Define', 'C Enum Type' );
+  return unless @enumsDefined;
+  
+  ENUM : foreach my $enum ( @enumsDefined ) {
+
+    # Test to see if implicit values are event used
+    # Setup variables needed for tracking
+    my $tempLexeme = $enum->lexeme;
+    my $implicitValue = 0;
+    my $equalSeen = 0;
+
+    # While we are looking at this set of enumerators
+    while ( $tempLexeme and $tempLexeme->text ne ';' ) {
+
+      # Test to see if implicit values are being used
+      $equalSeen = 1 if $tempLexeme->text eq '=';
+      if ( $tempLexeme->text eq ',' ) {
+        if ( $equalSeen ) {
+          $equalSeen = 0;
+        } else {
+          $implicitValue = 1;
+          last;
+        }
+      }
+      $tempLexeme = $tempLexeme->nextUseful;
+
+    }
+    # Skip of no implicit values are used
+    next ENUM unless $implicitValue;
+
+    # Setup variables needed for tracking
+    my $lexeme = $enum->lexeme;
+    my $impliedValue = 0;
+    my $lastAssignment = 0;
+    my $currentEnum = $enum;
+
+    # While we are looking at this set of enumerators
+    while ( $lexeme and $lexeme->text ne ';' ) {
+
+      # If we see an explicit assignment
+      if ( $lexeme->text eq '=' ) {
+
+        # Look at our assignment value. If it is less than what we expect via impliedValue but doesn't match our last assigned value, throw an error
+        $lexeme = $lexeme->nextUseful;
+        if ( $lexeme->text < $impliedValue and $lastAssignment != $lexeme->text and $lexeme->text !~ /^0x/ ) {
+          $check->violation( $currentEnum->ent, $currentEnum->file, $currentEnum->line, $currentEnum->column, ERR1 );  
+        }
+        
+        # Track the last value we assigned and our expected value
+        $lastAssignment = $impliedValue;
+        $impliedValue = $lexeme->text;
+
+      }
+
+      # Track our progress through the enumerators list and increment our impliedValue as neccissary
+      $currentEnum = $lexeme->ref if $lexeme->token eq 'Identifier';
+      $impliedValue++ if $lexeme->text eq ',';
+      $lexeme = $lexeme->nextUseful;
+
+    }
+  }
+}

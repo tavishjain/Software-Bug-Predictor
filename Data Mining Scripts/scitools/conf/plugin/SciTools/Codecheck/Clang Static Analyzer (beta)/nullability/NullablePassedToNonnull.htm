@@ -1,0 +1,12 @@
+<p><b>1.1.4.4. nullability.NullablePassedToNonnull (ObjC)</b><br>
+Warns when a nullable pointer is passed to a pointer which has a _Nonnull type.</p>
+<p>Examples:
+<pre><div class="highlight"><pre><span></span><span class="k">typedef</span> <span class="k">struct</span> <span class="n">Dummy</span> <span class="p">{</span> <span class="kt">int</span> <span class="n">val</span><span class="p">;</span> <span class="p">}</span> <span class="n">Dummy</span><span class="p">;</span>
+<span class="n">Dummy</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="nf">returnsNullable</span><span class="p">();</span>
+<span class="kt">void</span> <span class="nf">takesNonnull</span><span class="p">(</span><span class="n">Dummy</span> <span class="o">*</span><span class="n">_Nonnull</span><span class="p">);</span>
+
+<span class="kt">void</span> <span class="nf">test</span><span class="p">()</span> <span class="p">{</span>
+  <span class="n">Dummy</span> <span class="o">*</span><span class="n">p</span> <span class="o">=</span> <span class="n">returnsNullable</span><span class="p">();</span>
+  <span class="n">takesNonnull</span><span class="p">(</span><span class="n">p</span><span class="p">);</span> <span class="c1">// warn</span>
+<span class="p">}</span>
+</pre></div></pre></p>

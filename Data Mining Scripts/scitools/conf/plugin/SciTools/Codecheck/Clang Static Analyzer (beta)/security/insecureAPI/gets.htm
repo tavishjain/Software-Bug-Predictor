@@ -1,0 +1,8 @@
+<p><b>1.1.6.7. security.insecureAPI.gets (C)</b><br>
+Warn on uses of the 'gets' function.</p>
+<p>Examples:
+<pre><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">test</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kt">char</span> <span class="n">buff</span><span class="p">[</span><span class="mi">1024</span><span class="p">];</span>
+  <span class="n">gets</span><span class="p">(</span><span class="n">buff</span><span class="p">);</span> <span class="c1">// warn</span>
+<span class="p">}</span>
+</pre></div></pre></p>

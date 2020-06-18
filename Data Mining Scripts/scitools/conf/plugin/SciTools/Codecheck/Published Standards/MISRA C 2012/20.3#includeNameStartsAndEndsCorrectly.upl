@@ -1,0 +1,91 @@
+#This script is designed to run with Understand - CodeCheck
+# Written by Blake Knudsen
+use base ("Understand::Codecheck");
+use strict;
+
+
+use constant ERR1 => '#include directive not followed by either a <filename> or "filename"';
+
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+sub checkID { return "MISRA12_20.3";}
+
+
+sub name { return '20.3 The #include directive shall be followed by either a <filename> or "filename" sequence';}
+
+sub description { return '20.3 (Required) The #include directive shall be followed by either a <filename> or "filename" sequence';}
+
+sub detailed_description { return <<"END_DESC"
+<p><b>Amplification</b><br>
+This rule applies after macro replacement has been performed.
+</p>
+
+<p><b>Rationale</b><br>
+The behaviour is undefined if a <i>#include</i> directive does not use one of the following forms:
+</p>
+
+<ul>
+  <li>
+    #include <filename>
+  </li>
+  <li>
+    #include "filename"
+  </li>
+</ul>
+
+<b>Example</b><pre style="margin-top:0;padding-top:0;">
+  #include "filename.h"     /* Compliant */
+  #include <filename.h>     /* Compliant */
+  #include another.h        /* Non-compliant */
+
+  #define HEADER "filename.h"
+  #include HEADER           /* Compliant */
+  #define FILENAME file2.h
+  #include FILENAME         /* Non-compliant */
+
+  #define BASE "base"
+  #define EXT ".ext"
+  #include BASE EXT          /* Non-compliant - strings are concatenated
+                              * after preprocessing */
+
+  #include "./include/cpu.h" /* Compliant - filename may include a path */
+</pre>
+END_DESC
+}
+
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+sub test_entity { return 1;}
+
+sub test_global { return 0;}
+
+sub define_options {
+  my $check = shift;
+}
+
+sub check {
+  my $check = shift; 
+  my $file = shift;
+  return unless $file->kind->check("c file ~unknown ~unresolved");
+  my $lexer = $file->lexer("false");
+  my $lexeme = $lexer->first();
+
+  while ($lexeme){
+    if ($lexeme && $lexeme->token() eq "Preprocessor" && $lexeme->text() eq "include"){
+      $lexeme = $lexeme->nextUseful();
+      if($lexeme && ($lexeme->text() =~ /^\</g && $lexeme->text() =~ /$\>/g) || ($lexeme->text() =~ /^\"/g && $lexeme->text() =~ /$\"/g)){
+
+        }else{
+          $check->violation($file,$file,$lexeme->line_begin(),$lexeme->column_begin(),ERR1);
+        }
+    }
+    $lexeme = $lexeme->nextUseful();
+  }
+}
+

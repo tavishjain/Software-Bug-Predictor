@@ -1,0 +1,374 @@
+# This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson
+# 11-13-14
+
+
+# Boiler Plate code
+use base ( 'Understand::Codecheck' );
+use strict;
+
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => 'Identifier %1, has more than one external definition';
+use constant ERR2 => 'Identifier %1, does not have a definition';
+
+
+# This registers ERR1 with Understand
+sub register_tr_text {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+  $check->add_tr_text(ERR2);
+}
+
+sub checkID { return "MISRA12_8.6";}
+
+
+
+# This is the short error the Understand will use
+sub name{
+  return '8.6 ( Strict | Special ) An identifier with external linkage shall have exactly one external definition';
+}
+
+
+# This is the full description of the rule being tested
+sub description {
+  return '8.6 (Global)( Required ) An identifier with external linkage shall have exactly one external definition.';
+}
+
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description {
+  return  <<"END_DESC"
+
+<p><b>Developer's note:</b><br>
+The Code Check option to ignore identifiers defined in standard library files requires system files and standard 
+library files to be included into the project to work correctly. Under Project->Configure Project, expand the 
+tree next to C++ by clicking the arrow then select 'Includes' ( Click the word 'Includes' ). Make sure 
+both "Add found include files to source list" and "Add found system include files to source list" are selected.
+</p>
+
+<p><b>Rationale</b><br>
+The behaviour is undefined if an identifier is used for which multiple definitions exist ( in different files )
+or no definition exists at all. Multiple definitions in different files are not permitted by this rule even
+if the definitions are the same. It is undefined behaviour if the declarations are different, or initialize
+the identifier to different values.
+</p>
+
+<p><b>Example</b><br>
+In this example the object i is defined twice.
+</p>
+
+<pre style="margin-top:0;padding-top:0;">
+
+  /* file1.c                                                  */
+  int16_t i = 10;
+
+  /* file2.c                                                  */
+  int16_t i = 20; /* Non-compliant - two definitions of i     */
+
+</pre>
+
+<p>
+In this example the object j has one tentative definition and one external definition.
+</p>
+
+<pre style="margin-top:0;padding-top:0;">
+
+  /* file3.c                                                  */
+  int16_t j;      /* Tentative definition                     */
+  int16_t j = 1;  /* Compliant - external definition          */
+
+</pre>
+
+<p>
+The following example is non-compliant because the object k has two external definitions. The
+tentative definition in file4.c becomes an external definition at the end of the translation unit.
+</p>
+
+<pre style="margin-top:0;padding-top:0;">
+
+  /* file4.c                                                  */
+  int16_t k;      /* Tentative definition - becomes external  */
+
+  /* file5.c                                                  */
+  int16_t k = 0;  /* External definition                      */
+
+</pre>
+
+END_DESC
+}
+
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language eq "C++";
+}
+
+
+# This determines if this script is per file
+sub test_entity {
+  return 0;
+}
+
+
+# This determines if this script is per project or per file
+sub test_global {
+  return 1;
+}
+
+
+sub define_options {
+  my $check = shift;
+  $check->option->checkbox( 'exclusions', 'Exclude standard library files', 0 );
+  $check->option->text( 'exceptions', 'Namespace Exception List ( Comma Delimited )', '' );
+}
+
+
+# This is the actual test being performed on the user's code
+sub check {
+
+  # Pull the check and file from calling function, return unless file
+  my $check = shift;
+  my @globalsDefined = $check->db->ents( 'C Function ~Member ~Static ~Lambda, C Object Global ~Static ~Unknown ~Unresolved' );
+  return unless @globalsDefined;
+
+  my %standardLibraries = ();
+
+  %standardLibraries = (
+    'cstdlib.h' => 1,
+    'csignal.h' => 1,
+    'csetjmp.h' => 1,
+    'cstdarg.h' => 1,
+    'typeinfo.h' => 1,
+    'typeindex.h' => 1,
+    'type_traits.h' => 1,
+    'bitset.h' => 1,
+    'functional.h' => 1,
+    'utility.h' => 1,
+    'ctime.h' => 1,
+    'chrono.h' => 1,
+    'cstddef.h' => 1,
+    'initializer_list.h' => 1,
+    'tuple.h' => 1,
+    'any.h' => 1,
+    'optional.h' => 1,
+    'variant.h' => 1,
+    'new.h' => 1,
+    'memory.h' => 1,
+    'scoped_allocator.h' => 1,
+    'memory_resource.h' => 1,
+    'climits.h' => 1,
+    'cfloat.h' => 1,
+    'cstdint.h' => 1,
+    'cinttypes.h' => 1,
+    'limits.h' => 1,
+    'exception.h' => 1,
+    'stdexcept.h' => 1,
+    'cassert.h' => 1,
+    'system_error.h' => 1,
+    'cerrno.h' => 1,
+    'cctype.h' => 1,
+    'cwctype.h' => 1,
+    'cstring.h' => 1,
+    'cwchar.h' => 1,
+    'cuchar.h' => 1,
+    'string.h' => 1,
+    'string_view.h' => 1,
+    'array.h' => 1,
+    'vector.h' => 1,
+    'deque.h' => 1,
+    'list.h' => 1,
+    'forward_list.h' => 1,
+    'set.h' => 1,
+    'map.h' => 1,
+    'unordered_set.h' => 1,
+    'unordered_map.h' => 1,
+    'stack.h' => 1,
+    'queue.h' => 1,
+    'algorithm.h' => 1,
+    'execution.h' => 1,
+    'iterator.h' => 1,
+    'cmath.h' => 1,
+    'complex.h' => 1,
+    'valarray.h' => 1,
+    'random.h' => 1,
+    'numeric.h' => 1,
+    'ratio.h' => 1,
+    'cfenv.h' => 1,
+    'iosfwd.h' => 1,
+    'ios.h' => 1,
+    'istream.h' => 1,
+    'ostream.h' => 1,
+    'iostream.h' => 1,
+    'fstream.h' => 1,
+    'sstream.h' => 1,
+    'strstream.h' => 1,
+    'iomanip.h' => 1,
+    'streambuf.h' => 1,
+    'cstdio.h' => 1,
+    'locale.h' => 1,
+    'clocale.h' => 1,
+    'codecvt.h' => 1,
+    'regex.h' => 1,
+    'atomic.h' => 1,
+    'thread.h' => 1,
+    'mutex.h' => 1,
+    'shared_mutex.h' => 1,
+    'future.h' => 1,
+    'condition_variable.h' => 1,
+    'filesystem.h' => 1,
+    'assert.h' => 1,
+    'ctype.h' => 1,
+    'errno.h' => 1,
+    'fenv.h' => 1,
+    'float.h' => 1,
+    'inttypes.h' => 1,
+    'iso646.h' => 1,
+    'math.h' => 1,
+    'setjmp.h' => 1,
+    'signal.h' => 1,
+    'stdalign.h' => 1,
+    'stdarg.h' => 1,
+    'stdatomic.h' => 1,
+    'stdbool.h' => 1,
+    'stddef.h' => 1,
+    'stdint.h' => 1,
+    'stdio.h' => 1,
+    'stdlib.h' => 1,
+    'stdnoreturn' => 1,
+    'tgmath.h' => 1,
+    'threads.h' => 1,
+    'time.h' => 1,
+    'uchar.h' => 1,
+    'wchar.h' => 1,
+    'wctype.h' => 1,
+  ) if $check->option->lookup( 'exclusions' );
+
+  # Initialize my hash for entity tracking
+  my %globalsSeen = ();
+
+  # Loop through each global object
+  GBL : foreach my $global ( @globalsDefined ) {
+
+    # Skip built in functions
+    next GBL if $global->name =~ /^__/;
+
+    # Pull the define and declare references
+    my $defineRef = $global->ref ( 'C Definein' );
+    my @declareReferences = $global->refs ( 'C Declarein' );
+
+    # This segment checks that there is a definition, and throws an error if not.
+    # If we don't have a define reference
+    unless ( $defineRef ) {
+
+      # Pull any reference and throw a violation
+      my @allRefs = $global->refs();
+      my $ref = $global->ref( 'C' );
+
+      unless ( $ref ) {
+        next GBL;
+      }
+
+      # Check to see if this entity is used in a white listed file
+      foreach my $reference ( @allRefs ) {
+        next GBL if exists $standardLibraries{ $reference->file->name };
+      }
+
+      # Check to see if this entity is used in a user defined namespace
+      my $textList = $check->option->lookup( 'exceptions' );
+      $textList =~ s/\s//g; #Strip whitespace in list;
+      my @exceptions = split( ',', $textList );
+
+      # Check all exceptions
+      foreach my $namespace ( @exceptions ) {
+        my $term = quotemeta( $namespace );
+        
+        # You're probably going to want to check the unique name of the customers entity if this check needs revisions
+        next GBL if $global->uniquename =~ /(\bc|\:\:)$term\:\:/;
+      }
+      
+      $check->violation ( $global, $ref->file, $ref->line, $ref->column, ERR2, $global->name );
+      next GBL;
+
+    }
+
+    # The next section is pointless if we don't have at least one declare reference
+    next GBL unless @declareReferences;
+
+
+    # This segment checks that each define and declare for this particular entity will resolve to the same translation unit
+    # Add the define reference to the declare reference
+    push ( @declareReferences, $defineRef );
+
+    # Initialize my final file location and a hash so we don't analyze the same file twice
+    my $translationFile = 0;
+    my %seenFiles = ();
+
+    # Loop through each reference
+    DEC : foreach my $declare ( @declareReferences ) {
+
+      # Start a queue
+      my @files = $declare->file;
+      while ( @files ) {
+
+        # Pop one off the queue and get all files that include this file
+        my $baseFile = shift ( @files );
+        my @includeBys = $baseFile->refs ( 'C Includeby' );
+
+        # If this file is included
+        if ( @includeBys ) {
+
+          # Loop though each include
+          foreach my $includeBy ( @includeBys ) {
+
+            # Add this file to the queue if we haven't seen it already
+            unless ( exists $seenFiles { $includeBy->ent->name } ) {
+
+              $seenFiles { $includeBy->ent->name } = 0;
+              push ( @files, $includeBy->file );
+
+            }
+
+          }
+
+        # This file isn't included anywhere
+        } else {
+
+          my $flag = 0;
+          foreach my $useDeclare ( @declareReferences ) {
+            $flag = 1 if $useDeclare->file->name eq $baseFile->name;
+          }
+          next unless $flag;
+
+          # Test to see if this declare reference is labeled extern
+          my $lexeme = $declare->lexeme;
+          while ( $lexeme and $lexeme->text ne 'extern' and $lexeme->text ne ';') {
+            $lexeme = $lexeme->prevUseful;
+          }
+
+          # If this is an 'extern' declaration, then this declare is good
+          next DEC if $lexeme and $lexeme->text eq 'extern';
+
+          # If we have gotten to a code already ( A file that isn't included anywhere )
+          if ( $translationFile ) {
+
+            # Throw an error unless it is the same file we saw before
+            unless ( $baseFile->name eq $translationFile ) {
+
+              $check->violation ( $global, $declare->file, $declare->line, $declare->column, ERR1, $global->name );
+              next GBL;
+
+            }
+
+          # This file becomes our base code file to test against all other references
+          } else {
+
+            $translationFile = $baseFile->name;
+
+          }
+        }
+      }
+    }
+  }
+}

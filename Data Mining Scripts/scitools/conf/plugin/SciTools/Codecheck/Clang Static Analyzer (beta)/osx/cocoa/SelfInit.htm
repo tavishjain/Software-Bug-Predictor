@@ -1,0 +1,29 @@
+<p><b>1.1.8.19. osx.cocoa.SelfInit (ObjC)</b><br>
+Check that 'self' is properly initialized inside an initializer method.</p>
+<p>Examples:
+<pre><div class="highlight"><pre><span></span><span class="k">@interface</span> <span class="nc">MyObj</span> : <span class="bp">NSObject</span> <span class="p">{</span>
+  <span class="kt">id</span> <span class="n">x</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="p">-</span> <span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nf">init</span><span class="p">;</span>
+<span class="k">@end</span>
+
+<span class="k">@implementation</span> <span class="nc">MyObj</span>
+<span class="p">-</span> <span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nf">init</span> <span class="p">{</span>
+  <span class="p">[</span><span class="nb">super</span> <span class="n">init</span><span class="p">];</span>
+  <span class="n">x</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="c1">// warn: instance variable used while 'self' is not</span>
+         <span class="c1">// initialized</span>
+  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="k">@end</span>
+
+<span class="k">@interface</span> <span class="nc">MyObj</span> : <span class="bp">NSObject</span>
+<span class="p">-</span> <span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nf">init</span><span class="p">;</span>
+<span class="k">@end</span>
+
+<span class="k">@implementation</span> <span class="nc">MyObj</span>
+<span class="p">-</span> <span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nf">init</span> <span class="p">{</span>
+  <span class="p">[</span><span class="nb">super</span> <span class="n">init</span><span class="p">];</span>
+  <span class="k">return</span> <span class="nb">self</span><span class="p">;</span> <span class="c1">// warn: returning uninitialized 'self'</span>
+<span class="p">}</span>
+<span class="k">@end</span>
+</pre></div></pre></p>

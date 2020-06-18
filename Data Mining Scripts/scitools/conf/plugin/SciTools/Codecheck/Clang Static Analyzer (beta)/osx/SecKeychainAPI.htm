@@ -1,0 +1,65 @@
+<p><b>1.1.8.4. osx.SecKeychainAPI (C)</b><br>
+Check for proper uses of Secure Keychain APIs.</p>
+<p>Examples:
+<pre><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">test</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kt">unsigned</span> <span class="kt">int</span> <span class="o">*</span><span class="n">ptr</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+  <span class="kt">UInt32</span> <span class="n">length</span><span class="p">;</span>
+
+  <span class="n">SecKeychainItemFreeContent</span><span class="p">(</span><span class="n">ptr</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">length</span><span class="p">);</span>
+    <span class="c1">// warn: trying to free data which has not been allocated</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="nf">test</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kt">unsigned</span> <span class="kt">int</span> <span class="o">*</span><span class="n">ptr</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+  <span class="kt">UInt32</span> <span class="o">*</span><span class="n">length</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+  <span class="kt">void</span> <span class="o">*</span><span class="n">outData</span><span class="p">;</span>
+
+  <span class="n">OSStatus</span> <span class="n">st</span> <span class="o">=</span>
+    <span class="n">SecKeychainItemCopyContent</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">ptr</span><span class="p">,</span> <span class="n">ptr</span><span class="p">,</span> <span class="n">length</span><span class="p">,</span> <span class="n">outData</span><span class="p">);</span>
+    <span class="c1">// warn: data is not released</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="nf">test</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kt">unsigned</span> <span class="kt">int</span> <span class="o">*</span><span class="n">ptr</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+  <span class="kt">UInt32</span> <span class="o">*</span><span class="n">length</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+  <span class="kt">void</span> <span class="o">*</span><span class="n">outData</span><span class="p">;</span>
+
+  <span class="n">OSStatus</span> <span class="n">st</span> <span class="o">=</span>
+    <span class="n">SecKeychainItemCopyContent</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">ptr</span><span class="p">,</span> <span class="n">ptr</span><span class="p">,</span> <span class="n">length</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">outData</span><span class="p">);</span>
+
+  <span class="n">SecKeychainItemFreeContent</span><span class="p">(</span><span class="n">ptr</span><span class="p">,</span> <span class="n">outData</span><span class="p">);</span>
+    <span class="c1">// warn: only call free if a non-NULL buffer was returned</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="nf">test</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kt">unsigned</span> <span class="kt">int</span> <span class="o">*</span><span class="n">ptr</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+  <span class="kt">UInt32</span> <span class="o">*</span><span class="n">length</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+  <span class="kt">void</span> <span class="o">*</span><span class="n">outData</span><span class="p">;</span>
+
+  <span class="n">OSStatus</span> <span class="n">st</span> <span class="o">=</span>
+    <span class="n">SecKeychainItemCopyContent</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">ptr</span><span class="p">,</span> <span class="n">ptr</span><span class="p">,</span> <span class="n">length</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">outData</span><span class="p">);</span>
+
+  <span class="n">st</span> <span class="o">=</span> <span class="n">SecKeychainItemCopyContent</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">ptr</span><span class="p">,</span> <span class="n">ptr</span><span class="p">,</span> <span class="n">length</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">outData</span><span class="p">);</span>
+    <span class="c1">// warn: release data before another call to the allocator</span>
+
+  <span class="k">if</span> <span class="p">(</span><span class="n">st</span> <span class="o">==</span> <span class="n">noErr</span><span class="p">)</span>
+    <span class="n">SecKeychainItemFreeContent</span><span class="p">(</span><span class="n">ptr</span><span class="p">,</span> <span class="n">outData</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="nf">test</span><span class="p">()</span> <span class="p">{</span>
+  <span class="n">SecKeychainItemRef</span> <span class="n">itemRef</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+  <span class="n">SecKeychainAttributeInfo</span> <span class="o">*</span><span class="n">info</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+  <span class="n">SecItemClass</span> <span class="o">*</span><span class="n">itemClass</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+  <span class="n">SecKeychainAttributeList</span> <span class="o">*</span><span class="n">attrList</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+  <span class="kt">UInt32</span> <span class="o">*</span><span class="n">length</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+  <span class="kt">void</span> <span class="o">*</span><span class="n">outData</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+  <span class="n">OSStatus</span> <span class="n">st</span> <span class="o">=</span>
+    <span class="n">SecKeychainItemCopyAttributesAndData</span><span class="p">(</span><span class="n">itemRef</span><span class="p">,</span> <span class="n">info</span><span class="p">,</span>
+                                         <span class="n">itemClass</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">attrList</span><span class="p">,</span>
+                                         <span class="n">length</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">outData</span><span class="p">);</span>
+
+  <span class="n">SecKeychainItemFreeContent</span><span class="p">(</span><span class="n">attrList</span><span class="p">,</span> <span class="n">outData</span><span class="p">);</span>
+    <span class="c1">// warn: deallocator doesn't match the allocator</span>
+<span class="p">}</span>
+</pre></div></pre></p>

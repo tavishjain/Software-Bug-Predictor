@@ -1,0 +1,1 @@
+(ObjC) Warn for suboptimal uses of NSAutoreleasePool in Objective-C GC mode.

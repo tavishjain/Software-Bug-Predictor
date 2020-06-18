@@ -1,0 +1,13 @@
+<p><b>1.1.5.4. optin.osx.cocoa.localizability.NonLocalizedStringChecker (ObjC)</b><br>
+Warns about uses of non-localized NSStrings passed to UI methods expecting localized NSStrings.</p>
+<p>Examples:
+<pre><div class="highlight"><pre><span></span><span class="bp">NSString</span> <span class="o">*</span><span class="n">alarmText</span> <span class="o">=</span>
+  <span class="n">NSLocalizedString</span><span class="p">(</span><span class="s">@"Enabled"</span><span class="p">,</span> <span class="s">@"Indicates alarm is turned on"</span><span class="p">);</span>
+<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">isEnabled</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">alarmText</span> <span class="o">=</span> <span class="s">@"Disabled"</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="bp">UILabel</span> <span class="o">*</span><span class="n">alarmStateLabel</span> <span class="o">=</span> <span class="p">[[</span><span class="bp">UILabel</span> <span class="n">alloc</span><span class="p">]</span> <span class="n">init</span><span class="p">];</span>
+
+<span class="c1">// Warning: User-facing text should use localized string macro</span>
+<span class="p">[</span><span class="n">alarmStateLabel</span> <span class="nl">setText</span><span class="p">:</span><span class="n">alarmText</span><span class="p">];</span>
+</pre></div></pre></p>

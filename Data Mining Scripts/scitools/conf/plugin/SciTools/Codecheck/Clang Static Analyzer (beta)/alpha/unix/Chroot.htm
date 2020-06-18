@@ -1,0 +1,10 @@
+<p><b>1.2.8.2. alpha.unix.Chroot (C)</b><br>
+Check improper use of chroot.</p>
+<p>Examples:
+<pre><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">f</span><span class="p">();</span>
+
+<span class="kt">void</span> <span class="nf">test</span><span class="p">()</span> <span class="p">{</span>
+  <span class="n">chroot</span><span class="p">(</span><span class="s">"/usr/local"</span><span class="p">);</span>
+  <span class="n">f</span><span class="p">();</span> <span class="c1">// warn: no call of chdir("/") immediately after chroot</span>
+<span class="p">}</span>
+</pre></div></pre></p>

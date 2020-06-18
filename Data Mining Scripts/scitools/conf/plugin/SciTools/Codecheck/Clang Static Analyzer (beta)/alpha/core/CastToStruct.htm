@@ -1,0 +1,17 @@
+<p><b>1.2.2.3. alpha.core.CastToStruct (C, C++)</b><br>
+Check for cast from non-struct pointer to struct pointer.</p>
+<p>Examples:
+<pre><div class="highlight"><pre><span></span><span class="c1">// C</span>
+<span class="k">struct</span> <span class="n">s</span> <span class="p">{};</span>
+
+<span class="kt">void</span> <span class="nf">test</span><span class="p">(</span><span class="kt">int</span> <span class="o">*</span><span class="n">p</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">struct</span> <span class="n">s</span> <span class="o">*</span><span class="n">ps</span> <span class="o">=</span> <span class="p">(</span><span class="k">struct</span> <span class="n">s</span> <span class="o">*</span><span class="p">)</span> <span class="n">p</span><span class="p">;</span> <span class="c1">// warn</span>
+<span class="p">}</span>
+
+<span class="c1">// C++</span>
+<span class="k">class</span> <span class="nc">c</span> <span class="p">{};</span>
+
+<span class="kt">void</span> <span class="nf">test</span><span class="p">(</span><span class="kt">int</span> <span class="o">*</span><span class="n">p</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">c</span> <span class="o">*</span><span class="n">pc</span> <span class="o">=</span> <span class="p">(</span><span class="n">c</span> <span class="o">*</span><span class="p">)</span> <span class="n">p</span><span class="p">;</span> <span class="c1">// warn</span>
+<span class="p">}</span>
+</pre></div></pre></p>

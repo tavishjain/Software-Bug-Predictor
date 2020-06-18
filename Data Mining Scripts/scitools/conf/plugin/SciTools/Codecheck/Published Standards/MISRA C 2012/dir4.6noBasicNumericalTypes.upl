@@ -1,0 +1,236 @@
+# This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson
+# 9-15-16
+
+
+# Boiler Plate code
+use base ("Understand::Codecheck");
+use strict;
+
+# Import required library
+use Codecheck::Libraries::InfoSiftr qw(getObjectBitFieldWidth);
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => 'Violation: basic numerical type "%1" used.';
+use constant ERR2 => 'Violation: basic numerical type "%1" used in "%2".';
+
+
+# This registers ERR1 with Understand
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+  $check->add_tr_text(ERR2);
+}
+
+sub checkID { return "MISRA12_4.6";}
+
+
+
+# This is the short error the Understand will use
+sub name { 
+  return 'Directive 4.6 typedefs that indicate size and signedness should be used in place of the basic numerical types';
+}
+
+
+# This is the full description of the rule being tested
+sub description { 
+  return 'Directive 4.6 ( Advisory ) typedefs that indicate size and signedness should be used in place of the basic numerical types.';
+}
+
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description { return <<"END_DESC"
+
+<p><b>Amplification</b><br>
+The basic numerical types of <em>char, short, int, long, long long </em>(C99)<em>, float, double </em>and<em> long double</em> should
+not be used, but specific-length <em>typedefs</em> should be used.
+</p>
+
+<p>
+For C99, the types provided by <stdint.h> should be used. For C90, equivalent types should be
+defined and used.
+</p>
+
+<p>
+A type must not be defined with a specific length unless the implemented type is actually of that
+length.
+</p>
+
+<p>
+It is not necessary to use typedefs in the declaration of bit-fields.
+</p>
+
+<p>
+For example, on a 32-bit C90 implementation the following defi nitions might be suitable:
+</p>
+
+<pre style="margin-top:0;padding-top:0;">
+
+  typedef signed  char  int8_t;
+  typedef signed  short int16_t;
+  typedef signed  int   int32_t;
+  typedef signed  long  int64_t;
+
+  typedef unsigned char   uint8_t;
+  typedef unsigned short  uint16_t;
+  typedef unsigned int    uint32_t;
+  typedef unsigned long   uint64_t;
+
+  typedef float       float32_t;
+  typedef double      float64_t;
+  typedef long double float128_t;
+
+</pre>
+
+<p><b>Rationale</b><br>
+In situations where the amount of memory being allocated is important, using specific-length types
+makes it clear how much storage is being reserved for each object.
+</p>
+
+<p>
+Adherence to this guideline does <strong>not</strong> guarantee portability because the size of the <em>int</em> type may
+determine whether or not an expression is subject to integer promotion. For example, an expression
+with type int16_t will not be promoted if <em>int</em> is implemented using 16 bits but will be promoted if <em>int</em>
+is implemented using 32 bits. This is discussed in more detail in the section on integer promotion in
+Appendix C.
+</p>
+
+<p>
+<em>Note:</em> defining a specific-length type whose size is <strong>not</strong> the same as the implemented type is counterproductive
+both in terms of storage requirements and in terms of portability. Care should be taken to
+avoid defi ning types with the wrong size.
+</p>
+
+<p>
+If abstract types are defined in terms of a specific-length type then it is not necessary, and may even
+be undesirable, for those abstract types to specify the size or sign. For example, the following code
+defines an abstract type representing mass in kilograms but does not indicate its size or sign:
+</p>
+
+<pre style="margin-top:0;padding-top:0;">
+
+  typedef uint16_t mass_kg_t;
+
+</pre>
+
+<p>
+It might be desirable not to apply this guideline when interfacing with The Standard Library or code
+outside the project’s control.
+</p>
+
+<p><b>Exception</b><br>
+
+<ol>
+  <ul>
+    The basic numerical types may be used in a <em>typedef</em> to define a specific-length type.
+  </ul>
+  <ul>
+    For function main, an <em>int</em> may be used rather than the <em>typedefs</em> as a return type. Therefore
+    int main (void) is permitted.
+  </ul>
+  <ul>
+    For function main an <em>int</em> may be used rather than the <em>typedefs</em> for the input parameter argc.
+  </ul>
+  <ul>
+    For function main a <em>char</em> may be used rather than the <em>typedefs</em> for the input parameter argv.
+  </ul>
+</ol>
+
+Therefore int main( int argc, char *argv[] ) is permitted (C99 Section 5.1.2.2.1).
+</p>
+
+<p><b>Example</b><br>
+</p>
+
+<pre style="margin-top:0;padding-top:0;">
+
+  /* Non-compliant - int used to define an object                   */
+  int x = 0;
+
+  /* Compliant - int used to define specific-length type            */
+  typedef int SINT_16;
+
+  /* Non-compliant - no sign or size specified                      */
+  ty pedef int speed_t;
+
+  /* Compliant - further abstraction does not need specific length  */
+  typedef int16_t torque_t;
+
+</pre>
+
+<p><b>Developer's Note</b><br>
+This check has a few limitations as noted here. Detecting the difference between C90 and C99 is not reliable; therefore, there is no
+way to determine if stdint.h should be used or if the typedefs should be defined manually. Detecting if sign and size is specified
+is not possible without limiting developers to the int8_t/uint8_t nomenclature used in stdint.h; therefore, this part of directive 
+4.6 will not be tested.
+</p>
+
+END_DESC
+}
+
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+
+# This determines if this script is per file
+sub test_entity { 
+  return 1;
+}
+
+
+# This determines if this script is per project or per file
+sub test_global { 
+  return 0;
+}
+
+
+# Any defined options go here
+sub define_options{
+
+}
+
+
+sub check {
+  my $check = shift;
+  my $file = shift;
+  return unless $file->kind->check('c file');
+  
+  my $lexer = $file->lexer(0);
+  
+  my $basicNumericalTypesRegex = qr(long\s+double|char|int|short|long|float|double);
+  my $regex = qr/\b($basicNumericalTypesRegex)\b/;
+  
+  foreach my $ref ($file->filerefs('define, declare', 'object, parameter, function', 0)) {
+
+    next if $ref->ent->name eq "main" || $ref->ent->name eq "_tmain" || $ref->ent->name eq "wmain" || $ref->ent->name eq "WinMain";
+
+    my $ent = $ref->ent;
+    
+    # weed out bit fields (unsigned int var : 3), because they're valid
+    my $bits = getObjectBitFieldWidth($ent, $lexer);
+    next if defined $bits;
+    
+    if ($ent->type && $ent->type =~ $regex) {
+      if ($1 eq $ent->type) {
+        # examples:
+        #   Violation: basic numeral type "int" used.
+        #   Violation: basic numeral type "double" used.
+        #   Violation: basic numeral type "char" used.
+        $check->violation($ent, $file, $ref->line, $ref->column, ERR1, $ent->type);
+      }
+      else {
+        # examples:
+        #   Violation: basic numeral type "int" used in "int *".
+        #   Violation: basic numeral type "int" used in "int [100]".
+        #   Violation: basic numeral type "char" used in "char *".
+        $check->violation($ent, $file, $ref->line, $ref->column, ERR2, $1, $ent->type);
+      }
+    }
+  }
+  
+  return;
+}

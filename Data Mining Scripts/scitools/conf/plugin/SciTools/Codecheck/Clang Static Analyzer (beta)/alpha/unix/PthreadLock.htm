@@ -1,0 +1,31 @@
+<p><b>1.2.8.3. alpha.unix.PthreadLock (C)</b><br>
+Simple lock -> unlock checker. Applies to: <code class="docutils literal notranslate"><span class="pre">pthread_mutex_lock,</span> <span class="pre">pthread_rwlock_rdlock,</span> <span class="pre">pthread_rwlock_wrlock,</span> <span class="pre">lck_mtx_lock,</span> <span class="pre">lck_rw_lock_exclusive</span></code><code class="docutils literal notranslate"><span class="pre">lck_rw_lock_shared,</span> <span class="pre">pthread_mutex_trylock,</span> <span class="pre">pthread_rwlock_tryrdlock,</span> <span class="pre">pthread_rwlock_tryrwlock,</span> <span class="pre">lck_mtx_try_lock,</span> <span class="pre">lck_rw_try_lock_exclusive,</span> <span class="pre">lck_rw_try_lock_shared,</span> <span class="pre">pthread_mutex_unlock,</span> <span class="pre">pthread_rwlock_unlock,</span> <span class="pre">lck_mtx_unlock,</span> <span class="pre">lck_rw_done</span></code>.</p>
+<p>Examples:
+<pre><div class="highlight"><pre><span></span><span class="n">pthread_mutex_t</span> <span class="n">mtx</span><span class="p">;</span>
+
+<span class="kt">void</span> <span class="nf">test</span><span class="p">()</span> <span class="p">{</span>
+  <span class="n">pthread_mutex_lock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">mtx</span><span class="p">);</span>
+  <span class="n">pthread_mutex_lock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">mtx</span><span class="p">);</span>
+    <span class="c1">// warn: this lock has already been acquired</span>
+<span class="p">}</span>
+
+<span class="n">lck_mtx_t</span> <span class="n">lck1</span><span class="p">,</span> <span class="n">lck2</span><span class="p">;</span>
+
+<span class="kt">void</span> <span class="nf">test</span><span class="p">()</span> <span class="p">{</span>
+  <span class="n">lck_mtx_lock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">lck1</span><span class="p">);</span>
+  <span class="n">lck_mtx_lock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">lck2</span><span class="p">);</span>
+  <span class="n">lck_mtx_unlock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">lck1</span><span class="p">);</span>
+    <span class="c1">// warn: this was not the most recently acquired lock</span>
+<span class="p">}</span>
+
+<span class="n">lck_mtx_t</span> <span class="n">lck1</span><span class="p">,</span> <span class="n">lck2</span><span class="p">;</span>
+
+<span class="kt">void</span> <span class="nf">test</span><span class="p">()</span> <span class="p">{</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">lck_mtx_try_lock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">lck1</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="k">return</span><span class="p">;</span>
+
+  <span class="n">lck_mtx_lock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">lck2</span><span class="p">);</span>
+  <span class="n">lck_mtx_unlock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">lck1</span><span class="p">);</span>
+    <span class="c1">// warn: this was not the most recently acquired lock</span>
+<span class="p">}</span>
+</pre></div></pre></p>

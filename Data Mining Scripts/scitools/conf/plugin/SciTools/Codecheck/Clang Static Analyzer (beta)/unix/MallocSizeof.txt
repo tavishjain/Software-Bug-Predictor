@@ -1,0 +1,1 @@
+(C) Check for dubious malloc arguments involving sizeof.

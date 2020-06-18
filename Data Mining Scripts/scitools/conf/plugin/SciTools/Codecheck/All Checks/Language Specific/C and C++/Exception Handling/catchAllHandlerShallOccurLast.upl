@@ -1,0 +1,170 @@
+#This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson
+
+# Boiler Plate code
+use base ("Understand::Codecheck");
+use strict;
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => 'Catch-all handler not last in function';
+
+# This registers ERR1 with Understand
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+# This is the short error the Understand will use
+
+sub checkID { return "CPP_E002";}
+
+sub name { return "Where multiple handlers are provided in a single try-catch statement or function-try-block, any ellipsis (catch-all) handler shall occur last";}
+
+# This is the full description of the rule being tested
+sub description { return "Where multiple handlers are provided in a single try-catch statement or function-try-block, any ellipsis (catch-all) handler shall occur last.";}
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description { return <<"END_DESC"
+<p><b>Developer's Note</b><br>
+This violation is automatically detected by the Strict parser's error system. This check will work
+with the Strict parser, but is not needed.</p>
+<br>
+<p><b>Rationale</b><br>
+If the catch-all handler is found before any other handler, that behaviour will be performed. Any
+handlers after the catch-all are <i>unreachable code</i> and can never be executed.</p>
+<br>
+<b>Example</b><pre style="margin-top:0;padding-top:0;">
+  void f1 ( )
+  {
+    try
+    {
+      // ...
+    }
+    catch ( int32_t i ) // int handler
+    {
+      // Handle int exceptions
+    }
+    catch( ... ) // catch-all handler
+    {
+      // Handle all other exception types
+    }
+  }
+  void f2 ( )
+  {
+    try
+    {
+      // ...
+    }
+    catch( ... ) // catch-all handler
+    {
+      // Handle all exception types
+    }
+    catch ( int32_t i ) // Non-compliant – handler will never be called
+    {
+    }
+  }
+</pre>
+END_DESC
+}
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+# This determines if this script is per file
+sub test_entity { return 1;}
+
+# This determines if this script is per project or per file
+sub test_global { return 0;}
+
+# Any defined options go here
+sub define_options{}
+
+
+# This function scans a single scope { to closing }
+sub testScope {
+
+  # Pull incoming parameters {
+  my $check = shift;
+  my $function = shift;
+  my $lexeme = shift;
+
+  # Setup tracking variables for while loop
+  my $end = $function->ent->ref( 'C End' );
+  my $trySeen = 0;
+  my $catchAllSeen = 0;
+
+  # Walk through function
+  while( $lexeme and $lexeme->line_begin < $end ) {
+    #Yield to GUI interupts
+    $check->yield();
+    return if $check->is_abort();
+
+    # New scope, recursively call self
+    if ( $lexeme->text eq '{' ) {
+      $lexeme = testScope( $check, $function, $lexeme->nextUseful ); 
+
+    # End of scope, return
+    } elsif ( $lexeme->text eq '}' ) {
+      return $lexeme;
+
+    # Mark enterance of a new try block
+    } elsif ( $lexeme->text eq 'try' ) {
+      $trySeen = 1;
+      $catchAllSeen = 0;
+
+    # Mark detection of catch all block
+    } elsif ( $lexeme->text eq 'catch' and $lexeme->nextUseful->nextUseful->text eq '...' ) {
+      $catchAllSeen = 1; 
+
+    # Throw error of we see a catch after seeing a catch all
+    } elsif ( $lexeme->text eq 'catch' and $catchAllSeen ) {
+      $check->violation( $function->ent, $function->file, $lexeme->line_begin, $lexeme->column_begin, ERR1 );
+    }
+
+    return unless $lexeme;
+    $lexeme = $lexeme->nextUseful;
+
+  }
+  return $lexeme;
+}
+
+
+# This is the actual test being performed on the user's code
+sub check {
+
+  # Pull the name of the check and the name of the file from the incoming script request
+  my $check = shift; 
+  my $file = shift;
+  return unless $file->kind->check( 'C File' );
+  
+  # Create a list of all functions that are defined and have a catch handler
+  my @functionsDefined = $file->filerefs( 'C Define', 'C Function', 1 );
+  return unless @functionsDefined;
+  
+  # Loop through each function with catch handlers
+  foreach my $function( @functionsDefined ) {
+
+    # Pull the contents of the function with catch handlers
+    my $text = $function->ent->contents;
+
+    # Remove any // style comments
+    $text =~ s/\/\/.*?\n/\n/g;
+    # Remove any /* */ style comments
+    $text =~ s/\/\*.*?\*\//\n/gs;
+
+    # Skip this function if it doesn't have a catch statement
+    next unless $text =~ /\bcatch\b/;
+
+    # Move lexeme forward until opening curly brae
+    my $lexeme = $function->lexeme;
+    while( $lexeme->text ne '{' ) {
+      $lexeme = $lexeme->nextUseful;
+    }
+
+    $lexeme = testScope( $check, $function, $lexeme->nextUseful );
+
+  }
+}

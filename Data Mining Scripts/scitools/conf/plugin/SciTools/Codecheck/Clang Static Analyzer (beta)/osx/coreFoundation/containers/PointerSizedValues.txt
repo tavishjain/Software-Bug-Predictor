@@ -1,0 +1,1 @@
+(C) Warns if 'CFArray', 'CFDictionary', 'CFSet' are created with non-pointer-size values.

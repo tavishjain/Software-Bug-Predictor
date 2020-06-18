@@ -1,0 +1,25 @@
+<p><b>1.1.8.13. osx.cocoa.NSError (ObjC)</b><br>
+Check usage of NSError parameters.</p>
+<p>Examples:
+<pre><div class="highlight"><pre><span></span><span class="k">@interface</span> <span class="nc">A</span> : <span class="bp">NSObject</span>
+<span class="p">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">foo:</span><span class="p">(</span><span class="bp">NSError</span> <span class="s">""""""""""""""""""""""""</span><span class="p">)</span><span class="nv">error</span><span class="p">;</span>
+<span class="k">@end</span>
+
+<span class="k">@implementation</span> <span class="nc">A</span>
+<span class="p">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">foo:</span><span class="p">(</span><span class="bp">NSError</span> <span class="s">""""""""""""""""""""""""</span><span class="p">)</span><span class="nv">error</span> <span class="p">{</span>
+  <span class="c1">// warn: method accepting NSError"""""""""""""""""""""""" should have a non-void</span>
+  <span class="c1">// return value</span>
+<span class="p">}</span>
+<span class="k">@end</span>
+
+<span class="k">@interface</span> <span class="nc">A</span> : <span class="bp">NSObject</span>
+<span class="p">-</span> <span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nf">foo:</span><span class="p">(</span><span class="bp">NSError</span> <span class="s">""""""""""""""""""""""""</span><span class="p">)</span><span class="nv">error</span><span class="p">;</span>
+<span class="k">@end</span>
+
+<span class="k">@implementation</span> <span class="nc">A</span>
+<span class="p">-</span> <span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nf">foo:</span><span class="p">(</span><span class="bp">NSError</span> <span class="s">""""""""""""""""""""""""</span><span class="p">)</span><span class="nv">error</span> <span class="p">{</span>
+  <span class="o">*</span><span class="n">error</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="c1">// warn: potential null dereference</span>
+  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="k">@end</span>
+</pre></div></pre></p>

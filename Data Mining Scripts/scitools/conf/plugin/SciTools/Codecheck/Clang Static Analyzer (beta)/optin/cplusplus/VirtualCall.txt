@@ -1,0 +1,1 @@
+(C++) Check virtual function calls during construction or destruction.

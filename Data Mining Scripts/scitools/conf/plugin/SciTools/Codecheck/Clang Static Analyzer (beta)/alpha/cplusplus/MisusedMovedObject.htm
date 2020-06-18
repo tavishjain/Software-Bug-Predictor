@@ -1,0 +1,13 @@
+<p><b>1.2.3.6. alpha.cplusplus.MisusedMovedObject (C++)</b><br>
+Method calls on a moved-from object and copying a moved-from object will be reported.</p>
+<p>Examples:
+<pre><div class="highlight"><pre><span></span> <span class="k">struct</span> <span class="n">A</span> <span class="p">{</span>
+  <span class="kt">void</span> <span class="n">foo</span><span class="p">()</span> <span class="p">{}</span>
+<span class="p">};</span>
+
+<span class="kt">void</span> <span class="nf">f</span><span class="p">()</span> <span class="p">{</span>
+  <span class="n">A</span> <span class="n">a</span><span class="p">;</span>
+  <span class="n">A</span> <span class="n">b</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">a</span><span class="p">);</span> <span class="c1">// note: 'a' became 'moved-from' here</span>
+  <span class="n">a</span><span class="p">.</span><span class="n">foo</span><span class="p">();</span>            <span class="c1">// warn: method call on a 'moved-from' object 'a'</span>
+<span class="p">}</span>
+</pre></div></pre></p>

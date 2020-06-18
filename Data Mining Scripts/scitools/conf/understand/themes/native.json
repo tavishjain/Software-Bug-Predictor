@@ -1,0 +1,7 @@
+{
+  "display-name":      "Native Theme",
+  "description":       "A minimalistic theme which attempts to set application colors using the system palette",
+  "defaults": {},
+  "editor": {},
+  "other": {}
+}

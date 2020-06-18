@@ -1,0 +1,1 @@
+(C) Check for an out-of-bound pointer being returned to callers.

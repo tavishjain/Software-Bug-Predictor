@@ -1,0 +1,8 @@
+<p><b>1.2.2.6. alpha.core.FixedAddr (C)</b><br>
+Check for assignment of a fixed address to a pointer.</p>
+<p>Examples:
+<pre><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">test</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kt">int</span> <span class="o">*</span><span class="n">p</span><span class="p">;</span>
+  <span class="n">p</span> <span class="o">=</span> <span class="p">(</span><span class="kt">int</span> <span class="o">*</span><span class="p">)</span> <span class="mh">0x10000</span><span class="p">;</span> <span class="c1">// warn</span>
+<span class="p">}</span>
+</pre></div></pre></p>

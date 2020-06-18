@@ -1,0 +1,26 @@
+<p><b>1.1.5.2. optin.mpi.MPI-Checker (C)</b><br>
+Checks Message Passing Interface code.</p>
+<p>Examples:
+<pre><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">test</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kt">double</span> <span class="n">buf</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+  <span class="n">MPI_Request</span> <span class="n">sendReq1</span><span class="p">;</span>
+  <span class="n">MPI_Ireduce</span><span class="p">(</span><span class="n">MPI_IN_PLACE</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">buf</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">MPI_DOUBLE</span><span class="p">,</span> <span class="n">MPI_SUM</span><span class="p">,</span>
+      <span class="mi">0</span><span class="p">,</span> <span class="n">MPI_COMM_WORLD</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">sendReq1</span><span class="p">);</span>
+<span class="p">}</span> <span class="c1">// warn: request 'sendReq1' has no matching wait.</span>
+
+<span class="kt">void</span> <span class="nf">test</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kt">double</span> <span class="n">buf</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+  <span class="n">MPI_Request</span> <span class="n">sendReq</span><span class="p">;</span>
+  <span class="n">MPI_Isend</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">MPI_DOUBLE</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">MPI_COMM_WORLD</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">sendReq</span><span class="p">);</span>
+  <span class="n">MPI_Irecv</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">MPI_DOUBLE</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">MPI_COMM_WORLD</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">sendReq</span><span class="p">);</span> <span class="c1">// warn</span>
+  <span class="n">MPI_Isend</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">MPI_DOUBLE</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">MPI_COMM_WORLD</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">sendReq</span><span class="p">);</span> <span class="c1">// warn</span>
+  <span class="n">MPI_Wait</span><span class="p">(</span><span class="o">&amp;</span><span class="n">sendReq</span><span class="p">,</span> <span class="n">MPI_STATUS_IGNORE</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="nf">missingNonBlocking</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kt">int</span> <span class="n">rank</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+  <span class="n">MPI_Comm_rank</span><span class="p">(</span><span class="n">MPI_COMM_WORLD</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">rank</span><span class="p">);</span>
+  <span class="n">MPI_Request</span> <span class="n">sendReq1</span><span class="p">[</span><span class="mi">10</span><span class="p">][</span><span class="mi">10</span><span class="p">][</span><span class="mi">10</span><span class="p">];</span>
+  <span class="n">MPI_Wait</span><span class="p">(</span><span class="o">&amp;</span><span class="n">sendReq1</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">7</span><span class="p">][</span><span class="mi">9</span><span class="p">],</span> <span class="n">MPI_STATUS_IGNORE</span><span class="p">);</span> <span class="c1">// warn</span>
+<span class="p">}</span>
+</pre></div></pre></p>

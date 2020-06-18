@@ -1,0 +1,16 @@
+<p><b>1.1.4.3. nullability.NullableDereferenced (ObjC)</b><br>
+Warns when a nullable pointer is dereferenced.</p>
+<p>Examples:
+<pre><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">LinkedList</span> <span class="p">{</span>
+  <span class="kt">int</span> <span class="n">data</span><span class="p">;</span>
+  <span class="k">struct</span> <span class="n">LinkedList</span> <span class="o">*</span><span class="n">next</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="k">struct</span> <span class="n">LinkedList</span> <span class="o">*</span> <span class="n">_Nullable</span> <span class="nf">getNext</span><span class="p">(</span><span class="k">struct</span> <span class="n">LinkedList</span> <span class="o">*</span><span class="n">l</span><span class="p">);</span>
+
+<span class="kt">void</span> <span class="nf">updateNextData</span><span class="p">(</span><span class="k">struct</span> <span class="n">LinkedList</span> <span class="o">*</span><span class="n">list</span><span class="p">,</span> <span class="kt">int</span> <span class="n">newData</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">struct</span> <span class="n">LinkedList</span> <span class="o">*</span><span class="n">next</span> <span class="o">=</span> <span class="n">getNext</span><span class="p">(</span><span class="n">list</span><span class="p">);</span>
+  <span class="c1">// Warning: Nullable pointer is dereferenced</span>
+  <span class="n">next</span><span class="o">-&gt;</span><span class="n">data</span> <span class="o">=</span> <span class="mi">7</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div></pre></p>

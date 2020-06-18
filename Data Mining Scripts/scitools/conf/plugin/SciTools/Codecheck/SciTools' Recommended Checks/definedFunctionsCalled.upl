@@ -1,0 +1,187 @@
+#This script is designed to run with Understand - CodeCheck
+#Every defined function shall be called at least once.
+use base qw(Understand::Codecheck);
+use strict;
+
+
+use constant ERR1 => 'Violation: %1 defined but not called.';
+use constant IGNORE1 => 'Ignore Virtual Functions (They can cause false positives since static analysis tools cannot track dynamic polymorphism)';
+
+sub register_tr_text {
+	my $check = shift;
+	$check->add_tr_text(ERR1);
+  $check->add_tr_text(IGNORE1);
+}
+
+sub checkID { return "RECOMMENDED_13";}
+
+sub name { 'Unused Functions' }
+
+sub description { 'Every defined function shall be called at least once.' }
+
+sub detailed_description { <<'END_DESC'
+<p><b>Rationale</b><br>
+Functions or procedures that are not called may be symptomatic of a serious problem, such as missing paths.
+Note that unused prototypes and main are not violations of this rule. </p>
+END_DESC
+}
+
+sub test_language {
+	my $language = shift;
+	return $language eq 'C++';
+}
+
+sub test_entity { 1 }
+
+sub test_global { 0 }
+
+sub define_options {
+  my $check = shift;  
+  $check->option->checkbox('ignoreVirtual',IGNORE1,1);
+  $check->option->checkbox( 'exclusions', 'Exclude standard library functions', 0 );
+  }
+
+
+sub check {
+  my $check = shift;
+  my $file = shift;
+  return unless $file->kind->check('c file');
+
+  my %standardLibraries = ();
+
+  %standardLibraries = (
+    'cstdlib.h' => 1,
+    'csignal.h' => 1,
+    'csetjmp.h' => 1,
+    'cstdarg.h' => 1,
+    'typeinfo.h' => 1,
+    'typeindex.h' => 1,
+    'type_traits.h' => 1,
+    'bitset.h' => 1,
+    'functional.h' => 1,
+    'utility.h' => 1,
+    'ctime.h' => 1,
+    'chrono.h' => 1,
+    'cstddef.h' => 1,
+    'initializer_list.h' => 1,
+    'tuple.h' => 1,
+    'any.h' => 1,
+    'optional.h' => 1,
+    'variant.h' => 1,
+    'new.h' => 1,
+    'memory.h' => 1,
+    'scoped_allocator.h' => 1,
+    'memory_resource.h' => 1,
+    'climits.h' => 1,
+    'cfloat.h' => 1,
+    'cstdint.h' => 1,
+    'cinttypes.h' => 1,
+    'limits.h' => 1,
+    'exception.h' => 1,
+    'stdexcept.h' => 1,
+    'cassert.h' => 1,
+    'system_error.h' => 1,
+    'cerrno.h' => 1,
+    'cctype.h' => 1,
+    'cwctype.h' => 1,
+    'cstring.h' => 1,
+    'cwchar.h' => 1,
+    'cuchar.h' => 1,
+    'string.h' => 1,
+    'string_view.h' => 1,
+    'array.h' => 1,
+    'vector.h' => 1,
+    'deque.h' => 1,
+    'list.h' => 1,
+    'forward_list.h' => 1,
+    'set.h' => 1,
+    'map.h' => 1,
+    'unordered_set.h' => 1,
+    'unordered_map.h' => 1,
+    'stack.h' => 1,
+    'queue.h' => 1,
+    'algorithm.h' => 1,
+    'execution.h' => 1,
+    'iterator.h' => 1,
+    'cmath.h' => 1,
+    'complex.h' => 1,
+    'valarray.h' => 1,
+    'random.h' => 1,
+    'numeric.h' => 1,
+    'ratio.h' => 1,
+    'cfenv.h' => 1,
+    'iosfwd.h' => 1,
+    'ios.h' => 1,
+    'istream.h' => 1,
+    'ostream.h' => 1,
+    'iostream.h' => 1,
+    'fstream.h' => 1,
+    'sstream.h' => 1,
+    'strstream.h' => 1,
+    'iomanip.h' => 1,
+    'streambuf.h' => 1,
+    'cstdio.h' => 1,
+    'locale.h' => 1,
+    'clocale.h' => 1,
+    'codecvt.h' => 1,
+    'regex.h' => 1,
+    'atomic.h' => 1,
+    'thread.h' => 1,
+    'mutex.h' => 1,
+    'shared_mutex.h' => 1,
+    'future.h' => 1,
+    'condition_variable.h' => 1,
+    'filesystem.h' => 1,
+    'assert.h' => 1,
+    'ctype.h' => 1,
+    'errno.h' => 1,
+    'fenv.h' => 1,
+    'float.h' => 1,
+    'inttypes.h' => 1,
+    'iso646.h' => 1,
+    'math.h' => 1,
+    'setjmp.h' => 1,
+    'signal.h' => 1,
+    'stdalign.h' => 1,
+    'stdarg.h' => 1,
+    'stdatomic.h' => 1,
+    'stdbool.h' => 1,
+    'stddef.h' => 1,
+    'stdint.h' => 1,
+    'stdio.h' => 1,
+    'stdlib.h' => 1,
+    'stdnoreturn' => 1,
+    'tgmath.h' => 1,
+    'threads.h' => 1,
+    'time.h' => 1,
+    'uchar.h' => 1,
+    'wchar.h' => 1,
+    'wctype.h' => 1,
+  ) if $check->option->lookup( 'exclusions' );
+  
+  my @refsDefined = $file->filerefs('define', 'function', 1);
+  foreach my $defRef(@refsDefined){
+    #Yield to GUI interupts
+    $check->yield();
+    return if $check->is_abort();
+    return 1 if $defRef->ent->kind->check("virtual") && $check->option->lookup('ignoreVirtual');
+    return 1 if exists $standardLibraries{ $defRef->file->name };
+    $check->violation($defRef->ent, $file, $defRef->line, $defRef->column, ERR1, $defRef->ent->name) unless isUsed($defRef->ent);
+  }
+  return;
+}
+
+sub isUsed{
+  my $ent = shift;
+  return 1 if $ent->name =~ /^~/; #skip destructors
+  return 1 if $ent->ref('useby'); #skip function pointers
+  return 1 if $ent->ref('callby'); #find anywhere that $ent is calledby something else
+  return 1 if $ent->name eq 'main';
+  if($ent->kind->check("virtual")){
+    my @subRefs = $ent->refs("overriddenby");
+    foreach my $sub (@subRefs){
+      return 1 if isUsed($sub->ent);
+    }
+  }
+  return 0;
+}

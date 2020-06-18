@@ -1,0 +1,1 @@
+(C) Check the size argument passed into C string functions for common erroneous patterns. Use -Wno-strncat-size compiler option to mute other strncat-related compiler warnings.

@@ -1,0 +1,16 @@
+<p><b>1.2.8.4. alpha.unix.SimpleStream (C)</b><br>
+Check for misuses of stream APIs. Check for misuses of stream APIs: <code class="docutils literal notranslate"><span class="pre">fopen,</span> <span class="pre">fclose</span></code> (demo checker, the subject of the demo (<a class="reference external" href="http://llvm.org/devmtg/2012-11/Zaks-Rose-Checker24Hours.pdf">Slides</a> ,<a class="reference external" href="https://youtu.be/kdxlsP5QVPw">Video</a>) by Anna Zaks and Jordan Rose presented at the<a class="reference external" href="http://llvm.org/devmtg/2012-11/">2012 LLVM Developers' Meeting</a>).</p>
+<p>Examples:
+<pre><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">test</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kt">FILE</span> <span class="o">*</span><span class="n">F</span> <span class="o">=</span> <span class="n">fopen</span><span class="p">(</span><span class="s">"myfile.txt"</span><span class="p">,</span> <span class="s">"w"</span><span class="p">);</span>
+<span class="p">}</span> <span class="c1">// warn: opened file is never closed</span>
+
+<span class="kt">void</span> <span class="nf">test</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kt">FILE</span> <span class="o">*</span><span class="n">F</span> <span class="o">=</span> <span class="n">fopen</span><span class="p">(</span><span class="s">"myfile.txt"</span><span class="p">,</span> <span class="s">"w"</span><span class="p">);</span>
+
+  <span class="k">if</span> <span class="p">(</span><span class="n">F</span><span class="p">)</span>
+    <span class="n">fclose</span><span class="p">(</span><span class="n">F</span><span class="p">);</span>
+
+  <span class="n">fclose</span><span class="p">(</span><span class="n">F</span><span class="p">);</span> <span class="c1">// warn: closing a previously closed file stream</span>
+<span class="p">}</span>
+</pre></div></pre></p>

@@ -1,0 +1,1 @@
+(C) Warn on mmap() calls that are both writable and executable.

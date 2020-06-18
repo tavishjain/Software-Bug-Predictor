@@ -1,0 +1,29 @@
+<p><b>1.2.7.2. alpha.security.ArrayBoundV2 (C)</b><br>
+Warn about buffer overflows (newer checker).</p>
+<p>Examples:
+<pre><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">test</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kt">char</span> <span class="o">*</span><span class="n">s</span> <span class="o">=</span> <span class="s">""</span><span class="p">;</span>
+  <span class="kt">char</span> <span class="n">c</span> <span class="o">=</span> <span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span> <span class="c1">// warn</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="nf">test</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kt">int</span> <span class="n">buf</span><span class="p">[</span><span class="mi">100</span><span class="p">];</span>
+  <span class="kt">int</span> <span class="o">*</span><span class="n">p</span> <span class="o">=</span> <span class="n">buf</span><span class="p">;</span>
+  <span class="n">p</span> <span class="o">=</span> <span class="n">p</span> <span class="o">+</span> <span class="mi">99</span><span class="p">;</span>
+  <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="c1">// warn</span>
+<span class="p">}</span>
+
+<span class="c1">// note: compiler has internal check for this.</span>
+<span class="c1">// Use -Wno-array-bounds to suppress compiler warning.</span>
+<span class="kt">void</span> <span class="nf">test</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kt">int</span> <span class="n">buf</span><span class="p">[</span><span class="mi">100</span><span class="p">][</span><span class="mi">100</span><span class="p">];</span>
+  <span class="n">buf</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="c1">// warn</span>
+<span class="p">}</span>
+
+<span class="c1">// note: requires alpha.security.taint check turned on.</span>
+<span class="kt">void</span> <span class="nf">test</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kt">char</span> <span class="n">s</span><span class="p">[]</span> <span class="o">=</span> <span class="s">"abc"</span><span class="p">;</span>
+  <span class="kt">int</span> <span class="n">x</span> <span class="o">=</span> <span class="n">getchar</span><span class="p">();</span>
+  <span class="kt">char</span> <span class="n">c</span> <span class="o">=</span> <span class="n">s</span><span class="p">[</span><span class="n">x</span><span class="p">];</span> <span class="c1">// warn: index is tainted</span>
+<span class="p">}</span>
+</pre></div></pre></p>

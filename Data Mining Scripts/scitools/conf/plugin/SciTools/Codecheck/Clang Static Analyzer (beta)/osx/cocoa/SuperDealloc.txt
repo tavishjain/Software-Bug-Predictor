@@ -1,0 +1,1 @@
+(ObjC) Warn about improper use of '[super dealloc]' in Objective-C.

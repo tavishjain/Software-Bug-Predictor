@@ -1,0 +1,1 @@
+(C) Check for values stored to variables that are never read afterwards.

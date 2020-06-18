@@ -1,0 +1,87 @@
+# This script is designed to run with Understand - CodeCheck
+# Rewritten by Kyle Jackson 
+# 11/6/2015
+
+# Boiler Plate code
+use base ("Understand::Codecheck");
+use strict;
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => 'Function defined with ellipsis notation: %1.';
+
+# This registers ERR1 with Understand
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+sub checkID { return "MISRA08_8-4-1";}
+
+
+# This is the short error the Understand will use
+sub name { return "8-4-1 Functions shall not be defined using the ellipsis notation";}
+
+# This is the full description of the rule being tested
+sub description { return "8-4-1 (Required) Functions shall not be defined using the ellipsis notation.";}
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description { return <<"END_DESC"
+<p><b>Rationale</b><br>
+Passing arguments via an ellipsis bypasses the type checking performed by the compiler.
+Additionally, passing an argument with non-<i>POD</i> class type leads to <i>undefined behaviour</i>.</p>
+<p>
+Note that the rule specifies â€œdefinedâ€? (and not â€œdeclaredâ€?) so as to permit the use of existing
+library functions.</p>
+
+<br>
+<b>Example</b>
+<pre style="margin-top:0;padding-top:0;">
+  
+  void MyPrintf ( char_t * pFormat, ... ); // Non-compliant
+</pre>
+
+END_DESC
+}
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+# This determines if this script is per file
+sub test_entity { return 1;}
+
+# This determines if this script is per project or per file
+sub test_global { return 0;}
+
+# Any defined options go here
+sub define_options{
+}
+
+# This is the actual test being performed on the user's code
+sub check {
+  # Pull the name of the check and the name of the file from the incoming script request
+  my $check = shift; 
+  my $file = shift;
+
+  # Check if we are looking at a file
+  return unless $file->kind->check( 'C File' );
+  
+  # Pull all function references for definitions
+  my @allRefs = $file->filerefs( 'C Define', 'C Function' );
+  
+  # Loop through each reference
+  foreach my $ref ( @allRefs ) {
+
+    next unless $ref->ent->contents =~ /\.\.\./;
+    my $lexeme = $ref->lexeme;
+
+    while( $lexeme->text ne '{' ) {
+
+      $check->violation( $ref->ent, $ref->file, $ref->line, $ref->column, ERR1, $ref->ent->name ) if $lexeme->text eq '...';
+      $lexeme = $lexeme->nextUseful;
+
+    }
+  }
+}

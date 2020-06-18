@@ -1,0 +1,20 @@
+<p><b>optin.cplusplus.VirtualCall</b><br>
+Check virtual member function calls during construction or destruction.</p>
+<p>Examples:
+<pre style="margin-top:0;padding-top:0;">
+class A {
+public:
+  A() {
+    f(); // warn
+  }
+  virtual void f();
+};
+
+class A {
+public:
+  ~A() {
+    this->f(); // warn
+  }
+  virtual void f();
+};
+</pre></p>

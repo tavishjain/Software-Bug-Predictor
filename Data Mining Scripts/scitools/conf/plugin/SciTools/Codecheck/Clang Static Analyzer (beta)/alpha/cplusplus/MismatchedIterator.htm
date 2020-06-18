@@ -1,0 +1,19 @@
+<p><b>1.2.3.5. alpha.cplusplus.MismatchedIterator (C++)</b><br>
+Check for use of iterators of different containers where iterators of the same container are expected.</p>
+<p>Examples:
+<pre><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">bad_insert3</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span> <span class="o">&amp;</span><span class="n">v1</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">vector</span> <span class="o">&amp;</span><span class="n">v2</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">v2</span><span class="p">.</span><span class="n">insert</span><span class="p">(</span><span class="n">v1</span><span class="p">.</span><span class="n">cbegin</span><span class="p">(),</span> <span class="n">v2</span><span class="p">.</span><span class="n">cbegin</span><span class="p">(),</span> <span class="n">v2</span><span class="p">.</span><span class="n">cend</span><span class="p">());</span> <span class="c1">// warn: container accessed</span>
+                                                  <span class="c1">//       using foreign</span>
+                                                  <span class="c1">//       iterator argument</span>
+  <span class="n">v1</span><span class="p">.</span><span class="n">insert</span><span class="p">(</span><span class="n">v1</span><span class="p">.</span><span class="n">cbegin</span><span class="p">(),</span> <span class="n">v1</span><span class="p">.</span><span class="n">cbegin</span><span class="p">(),</span> <span class="n">v2</span><span class="p">.</span><span class="n">cend</span><span class="p">());</span> <span class="c1">// warn: iterators of</span>
+                                                  <span class="c1">//       different containers</span>
+                                                  <span class="c1">//       used where the same</span>
+                                                  <span class="c1">//       container is</span>
+                                                  <span class="c1">//       expected</span>
+  <span class="n">v1</span><span class="p">.</span><span class="n">insert</span><span class="p">(</span><span class="n">v1</span><span class="p">.</span><span class="n">cbegin</span><span class="p">(),</span> <span class="n">v2</span><span class="p">.</span><span class="n">cbegin</span><span class="p">(),</span> <span class="n">v1</span><span class="p">.</span><span class="n">cend</span><span class="p">());</span> <span class="c1">// warn: iterators of</span>
+                                                  <span class="c1">//       different containers</span>
+                                                  <span class="c1">//       used where the same</span>
+                                                  <span class="c1">//       container is</span>
+                                                  <span class="c1">//       expected</span>
+<span class="p">}</span>
+</pre></div></pre></p>

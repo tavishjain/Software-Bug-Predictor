@@ -1,0 +1,200 @@
+#This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson
+
+# Boiler Plate code
+use base ("Understand::Codecheck");
+use strict;
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => 'Reserved Identifier, Macro, or Function defined, redefined or undefined in file %1';
+
+# This registers ERR1 with Understand
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+sub checkID { return "MISRA12_21.1";}
+
+
+# This is the short error the Understand will use
+sub name { return "21.1 #define and #undef shall not be used on a reserved identifier or reserved macro name";}
+
+# This is the full description of the rule being tested
+sub description { return "21.1 (Required) #define and #undef shall not be used on a reserved identifier or reserved macro name.";}
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description { return <<"END_DESC"
+<p><b>Amplification</b><br>
+This rule applies to the following:
+</p>
+
+<p>
+<ul>
+<li>
+Identifiers or macro names beginning with an underscore;
+</li>
+<li>
+Identifiers in file scope described in Section 7, “Library”, of The Standard;
+</li>
+<li>
+Macro names described in Section 7, “Library”, of The Standard as being defined in a standard
+header.
+</li>
+</ul>
+</p>
+
+<p>
+This rule also prohibits the use of <i>#define</i> or <i>#undef</i> on the identifier <i>defined</i> as this results in explicitly
+undefined behaviour.
+</p>
+
+<p>
+This rule does <b>not</b> include those identifiers or macro names that are described in the section of the
+applicable C standard entitled “Future Library Directions”.
+</p>
+
+<p>
+The Standard states that defining a macro with the same name as:
+</p>
+
+<ul>
+<li>
+A macro defined in a standard header, or
+</li>
+<li>
+An identifier with file scope declared in a standard header
+</li>
+</ul>
+
+<p>
+is well-defined provided that the header is not included. This rule does not permit such definitions on
+the grounds that they are likely to cause confusion.
+</p>
+
+<p>
+Note: the macro NDEBUG is not defined in a standard header and may therefore be <b>#define’d</b>.
+</p>
+
+<p><b>Rationale</b><br>
+Reserved identifiers and reserved macro names are intended for use by the implement ation.
+Removing or changing the meaning of a reserved macro may result in undefined behaviour.
+</p>
+
+<b>Example</b><pre style="margin-top:0;padding-top:0;">
+#undef __LINE__ 		/* Non-compliant - begins with _ */
+#define _ GUARD_H 1 	/* Non-compliant - begins with _ */
+#undef _BUILTIN_sqrt 	/* Non-compliant - the implementation
+						* may use _BUILTIN_sqrt for other
+						* purposes, e.g. generating a sqrt
+						* instruction */
+#define defined 		/* Non-compliant - reserved identifier */
+#define errno my_errno 	/* Non-compliant - library identifier */
+#define isneg( x ) ( ( x ) < 0 ) 	/* Compliant - rule doesn't include
+									* future library
+									* directions */
+</pre>
+
+<p><b>Additional Information</b><br>
+In the C++ 11 standard, under the section 'Reserved Identifiers' is statement, "All identifiers that begin with an 
+underscore and either an uppercase letter or another underscore are always reserved for any use." This Code Check
+enforces this rule when determining if an identifier is acceptable.
+</p>
+
+END_DESC
+}
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+# This determines if this script is per file
+sub test_entity { return 1;}
+
+# This determines if this script is per project or per file
+sub test_global { return 0;}
+
+# Any defined options go here
+sub define_options{}
+
+# Use this function for throwing errors
+sub throwError {
+  my $check = shift;
+  my $ent = shift;
+  my $file = shift;
+  my $line = shift;
+  my $column = shift;
+  my $error = shift;
+  my $name = shift;
+  $check->violation($ent,$file,$line,$column,$error,$name);
+}
+
+# This is the actual test being performed on the user's code
+sub check {
+  # Pull the name of the check and the name of the file from the incoming script request
+  my $check = shift; 
+  my $file = shift;
+  return unless $file->kind->check("c file");
+  
+  #define my array of reserved keywords
+  my @reservedNames = ("abort", "abs", "acos", "asctime", "asin", "atan", "atan2", "atexit", 
+                       "atof", "atoi", "atol", "bsearch", "btowc", "calloc", "ceil", "clearerr", 
+					   "clock", "cos", "cosh", "ctime", "difftime", "div", "exit", "exp", "fabs", 
+					   "fclose", "feof", "ferror", "fflush", "fgetc", "fgetpos", "fgets", 
+					   "fgetwc", "fgetws", "floor", "fmod", "fopen", "fprintf", "fputc", "fputs", 
+					   "fputwc", "fputws", "fread", "free", "freopen", "frexp", "fscanf", "fseek", 
+					   "fsetpos", "ftell", "fwide", "fwprintf", "fwrite", "fwscanf", "getc", 
+					   "getchar", "getenv", "gets", "getwc", "getwchar", "gmtime", "isalnum", 
+					   "isalpha", "iscntrl", "isdigit", "isgraph", "islower", "isprint", 
+					   "ispunct", "isspace", "isupper", "iswalnum", "iswalpha", "iswcntrl", 
+					   "iswctype", "iswdigit", "iswgraph", "iswlower", "iswprint", "iswpunct", 
+					   "iswspace", "iswupper", "iswxdigit", "isxdigit", "labs", "ldexp", "ldiv", 
+					   "localeconv", "localtime", "log", "log10", "longjmp", "malloc", "mblen", 
+					   "mbrlen", "mbrtowc", "mbsinit", "mbsrtowcs", "mbstowcs", "mbtowc", "memchr", 
+					   "memcmp", "memcpy", "memmove", "memset", "mktime", "modf", "perror", "pow", 
+					   "printf", "putc", "putchar", "puts", "putwc", "putwchar", "qsort", "raise", 
+					   "rand", "realloc", "remove", "rename", "rewind", "scanf", "setbuf", 
+					   "setlocale", "setvbuf", "signal", "sin", "sinh", "sprintf", "sqrt", "srand", 
+					   "sscanf", "strcat", "strchr", "strcmp", "strcoll", "strcpy", "strcspn", 
+					   "strerror", "strftime", "strlen", "strncat", "strncmp", "strncpy", "strpbrk", 
+					   "strrchr", "strspn", "strstr", "strtod", "strtok", "strtol", "strtoul", 
+					   "strxfrm", "swprintf", "swscanf", "system", "tan", "tanh", "time", "tmpfile", 
+					   "tmpnam", "tolower", "toupper", "towctrans", "towlower", "towupper", "ungetc", 
+					   "ungetwc", "vfprintf", "vfwprintf", "vprintf", "vsprintf", "vswprintf", 
+					   "vwprintf", "wcrtomb", "wcscat", "wcschr", "wcscmp", "wcscoll", "wcscpy", 
+					   "wcscspn", "wcsftime", "wcslen", "wcsncat", "wcsncmp", "wcsncpy", "wcspbrk", 
+					   "wcsrchr", "wcsrtombs", "wcsspn", "wcsstr", "wcstod", "wcstok", "wcstol", 
+					   "wcstombs", "wcstoul", "wcsxfrm", "wctob", "wctomb", "wctrans", "wctype", 
+					   "wmemchr", "wmemcmp", "wmemcpy", "wmemmove", "wmemset", "wprintf", "wscanf", 
+					   "assert", "BUFSIZ", "CLOCKS_PER_SEC", "EDOM", "EOF", "ERANGE", "errno", 
+					   "EXIT_FAILURE", "EXIT_SUCCESS", "FILENAME_MAX", "HUGE_VAL", "LC_ALL", 
+					   "LC_COLLATE", "LC_CTYPE", "LC_MONETARY", "LC_NUMERIC", "LC_TIME", "L_tmpnam", 
+					   "MB_CUR_MAX", "NULL", "FOPEN_MAX", "offsetof", "RAND_MAX", "SEEK_CUR", 
+					   "SEEK_END", "SEEK_SET", "setjmp", "SIGTERM", "SIG_DFL", "SIG_ERR", "SIG_IGN", 
+					   "stderr", "stdin", "SIGABRT", "SIGILL", "SIGINT", "SIGSEGV", "WCHAR_MAX", 
+					   "WCHAR_MIN", "WEOF", "WEOF", "_IOFBF", "_IOLBF", "stdout", "SIGFPE", "va_arg", 
+					   "va_end", "va_start", "_IONBF", "TMP_MAX", "alignas", "alignof", "and", 
+					   "and_eq", "asm", "auto", "bitand", "bitor", "bool", "break", "case", "catch", 
+					   "char", "char16_t", "char32_t", "class", "compl", "const", "constexpr", 
+					   "const_cast", "continue", "decltype", "default", "delete", "do", "double", 
+					   "dynamic_cast", "else", "enum", "explicit", "export", "extern", "false", 
+					   "float", "for", "friend", "goto", "if", "inline", "int", "long", "mutable", 
+					   "namespace", "new", "noexcept", "not", "not_eq", "nullptr", "operator", "or", 
+					   "or_eq", "private", "protected", "public", "register", "reinterpret_cast", 
+					   "return", "short", "signed", "sizeof", "static", "static_assert", "static_cast", 
+					   "struct", "switch", "template", "this", "thread_local", "throw", "true", "try", 
+					   "typedef", "typeid", "typename", "union", "unsigned", "using", "virtual", "void", 
+					   "volatile", "wchar_t", "while", "xor", "xor_eq", "defined");
+  
+  # Loop through all macros and check the defines and undefs against the black list
+  my @funcrefs = $file->filerefs("Set ~inactive, Define ~inactive","macro");
+  foreach my $ref(@funcrefs) {
+	throwError($check, $ref->ent,$file,$ref->line,$ref->column,ERR1,$file->name) if $ref->ent->name =~ /^_[A-Z]{1}.*$/;
+	throwError($check, $ref->ent,$file,$ref->line,$ref->column,ERR1,$file->name) if $ref->ent->name =~ /^__.*$/;
+	my $name = $ref->ent->name;
+	throwError($check, $ref->ent, $file, $ref->line,$ref->column,ERR1,$file->name) if grep {/^\Q$name\E$/} @reservedNames;
+	#throwError($check, $ref->ent, $file, $ref->line,$ref->column,ERR1,$file->name);
+  }
+}

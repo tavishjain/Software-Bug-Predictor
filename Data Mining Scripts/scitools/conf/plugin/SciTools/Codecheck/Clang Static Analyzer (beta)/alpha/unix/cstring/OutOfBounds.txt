@@ -1,0 +1,1 @@
+(C) Check for out-of-bounds access in string functions; applies to:`` strncopy, strncat``.
