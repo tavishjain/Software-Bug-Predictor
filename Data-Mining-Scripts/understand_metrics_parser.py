@@ -64,15 +64,18 @@ os.system("find . -iname '*.java' -exec cp \{\} ./ \;")
 os.system("rm -r */")
 os.system("find . -type f ! -name ['*.java', '*.xlsx'] -delete")
 
-os.system("cp " + parent_dir + "/commands.txt commands.txt")
+# os.system("cp " + parent_dir + "/commands.txt commands.txt")
 print("\n=> Directory Cleaning Done !!!")
 
 path_of_und = parent_dir + "/scitools/bin/linux64/und"
-os.system("ln -s " + path_of_und)
+# os.system("ln -s " + path_of_und)
 
 print("\n=> Starting metrics generation !!!")
-os.system("./scitools/bin/linux64/und commands.txt")
 
+run_commands_txt = path_of_und + " " + parent_dir + "/commands.txt"
+# os.system("./scitools/bin/linux64/und commands.txt")
+os.system(run_commands_txt)
+	
 # os.system("./scitools/bin/linux64/und create -db -languages Java " + path + ".udb")
 # os.system("./scitools/bin/linux64/und open " + path + ".udb")
 

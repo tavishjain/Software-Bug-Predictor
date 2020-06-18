@@ -15,6 +15,7 @@ try:
     import pandas as pd
 except ImportError:
     os.system("apt install python3-pip")
+    os.system('apt install libncurses5')
     os.system("pip3 install gitpython")
     os.system("pip3 install pandas")
     os.system("pip3 install openpyxl==3.0.1")
