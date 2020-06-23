@@ -17,14 +17,15 @@ if (path.split("/"))[-1] == '':
 else:
 	path = (path.split("/"))[-1]
 
+
 print("\n=========== Running WHATCHANGED script ===========")
 os.system("python3 git_whatchanged_parser.py " + path)
 
-# print("\n=========== Running CHECKOUT script ===========")
-# os.system("python3 git_checkout_parser.py " + path)
+print("\n=========== Running CHECKOUT script ===========")
+os.system("python3 git_checkout_parser.py " + path)
 
-print("\n=========== Collecting Metrics Data ===========")
-os.system("python3 understand_metrics_parser.py " + path)
+# print("\n=========== Collecting Metrics Data ===========")
+# os.system("python3 understand_metrics_parser.py " + path)
 
 # List of all collected metrics
 # AvgCyclomatic, AvgCyclomaticModified, AvgCyclomaticStrict, AvgEssential, AvgLine, AvgLineBlank, AvgLineCode, AvgLineComment, CountClassBase, CountClassCoupled, CountClassCoupledModified, CountClassDerived, CountDeclClass, CountDeclClassMethod, CountDeclClassVariable, CountDeclExecutableUnit, CountDeclFile, CountDeclFunction, CountDeclInstanceMethod, CountDeclInstanceVariable, CountDeclMethod, CountDeclMethodAll, CountDeclMethodDefault, CountDeclMethodPrivate, CountDeclMethodProtected, CountDeclMethodPublic, CountInput, CountLine, CountLineBlank, CountLineCode, CountLineCodeDecl, CountLineCodeExe, CountLineComment, CountOutput, CountPath, CountPathLog, CountSemicolon, CountStmt, CountStmtDecl, CountStmtExe, Cyclomatic, CyclomaticModified, CyclomaticStrict, Essential, Knots, MaxCyclomatic, MaxCyclomaticModified, MaxCyclomaticStrict, MaxEssential, MaxEssentialKnots, MaxInheritanceTree, MaxNesting, MinEssentialKnots, PercentLackOfCohesion, PercentLackOfCohesionModified, RatioCommentToCode, SumCyclomatic, SumCyclomaticModified, SumCyclomaticStrict, SumEssential

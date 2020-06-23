@@ -37,7 +37,7 @@
 #                    |-> scitools
 #                    |-> (Cloned Repo)
 # ./scitools/bin/linux64/und
-import optparse, sys, os
+import optparse, sys, os, time
 
 parser  =   optparse.OptionParser()
 options, args   =   parser.parse_args()
@@ -48,21 +48,21 @@ else:
     print ("You must specify a git object as the first argument")
     sys.exit(os.EX_NOINPUT)
 
-parent_dir = os.getcwd()
+parent_dir = os.getcwd() 
 
 repo_location = str(path)
-# os.system("cp commands.txt " + repo_location + "/commands.txt")
 os.chdir(repo_location)
+# os.system("cp commands.txt " + repo_location + "/commands.txt")
 # os.system("cp " + parent_dir + "/commands.txt commands.txt")
 
 # os.system("find . -iname ('*.java' '*.txt') -exec cp \{\} ./ \;")
 # os.system("rm -r */")
 # os.system("find . -type f ! -name ('*.java' '*.txt') -delete")
 
-#Cleaning all files and extracting .java files to main folder, dleeting rest
+#Cleaning all files and extracting .java files to main folder, deleting all except java and xlsx
 os.system("find . -iname '*.java' -exec cp \{\} ./ \;")
 os.system("rm -r */")
-os.system("find . -type f ! -name ['*.java', '*.xlsx'] -delete")
+os.system("find . -type f ! -name '*.java' -o -name '*.xlsx' -o -name '*.csv' -delete")
 
 # os.system("cp " + parent_dir + "/commands.txt commands.txt")
 print("\n=> Directory Cleaning Done !!!")
