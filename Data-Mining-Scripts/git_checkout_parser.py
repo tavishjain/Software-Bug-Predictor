@@ -60,7 +60,6 @@ for i in range(len(df['Commit_Hash'])):
 	commit = df['Commit_Hash'][i]
 	os.system('git checkout ' + commit)
 	print('Covering Commit #', commit)
-	# time.sleep(30)
 	all_commits_left = df.loc[df['Commit_Hash'] == commit]
 
 	# Run Sub-script
@@ -76,7 +75,9 @@ for i in range(len(df['Commit_Hash'])):
 	os.rename('metrics.csv', new_file_name_metrics)
 	metrics_df_right = pd.read_csv(new_file_name_metrics)
 	metrics_df_right = metrics_df_right.loc[metrics_df_right['Kind'] == 'File']
+	metrics_df_right = metrics_df_right[['Name', 'AvgCyclomatic', 'AvgCyclomaticModified', 'AvgCyclomaticStrict', 'AvgEssential', 'AvgLine', 'AvgLineBlank', 'AvgLineCode', 'AvgLineComment', 'CountDeclClass', 'CountDeclClassMethod', 'CountDeclClassVariable', 'CountDeclExecutableUnit', 'CountDeclFunction', 'CountDeclInstanceMethod', 'CountDeclInstanceVariable', 'CountDeclMethod', 'CountDeclMethodDefault', 'CountDeclMethodPrivate', 'CountDeclMethodProtected', 'CountDeclMethodPublic', 'CountLine', 'CountLineBlank', 'CountLineCode', 'CountLineCodeDecl', 'CountLineCodeExe', 'CountLineComment', 'CountSemicolon', 'CountStmt', 'CountStmtDecl', 'CountStmtExe', 'MaxCyclomatic', 'MaxCyclomaticModified', 'MaxCyclomaticStrict', 'MaxEssential', 'MaxNesting', 'RatioCommentToCode', 'SumCyclomatic', 'SumCyclomaticModified', 'SumCyclomaticStrict', 'SumEssential']]
 	metrics_df_right.to_csv(new_file_name_metrics)
+
 
 	os.system("find . -type f ! -name '*.csv' -o -name '*.xlsx' -delete")
 	
@@ -86,7 +87,6 @@ for i in range(len(df['Commit_Hash'])):
 	temp_df = cartesian_product(all_commits_left, metrics_df_right)
 	req_cols_temp_df = [col for col in temp_df.columns if col.lower()[:7] != 'unnamed']
 	temp_df = temp_df[req_cols_temp_df]
-	# temp_df = temp_df.drop('Unnamed: 0', axis = 1)
 	print(temp_df.info())
 	temp_df.to_excel(str(i) + '.xlsx')
 	# print(temp_df)
@@ -95,11 +95,11 @@ for i in range(len(df['Commit_Hash'])):
 
 		req_cols_final_data = [col for col in final_data.columns if col.lower()[:7] != 'unnamed']
 		final_data = final_data[req_cols_final_data]
-		print('Final Data: ', final_data.shape)
+		print('Final Data before append: ', final_data.shape)
 		final_data = final_data.append(temp_df)
-		print('Final Data: ', final_data.shape)
+		print('Final Data after append: ', final_data.shape)
 		print('Temp DF: ', temp_df.shape)
-		time.sleep(10)
+		# time.sleep(10)
 		final_data.to_excel('final_data.xlsx')
 	else:
 		print('Generating First File.......')
