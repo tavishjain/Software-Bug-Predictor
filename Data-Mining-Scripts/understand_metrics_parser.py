@@ -61,8 +61,9 @@ os.chdir(repo_location)
 
 #Cleaning all files and extracting .java files to main folder, deleting all except java and xlsx
 os.system("find . -iname '*.java' -exec cp \{\} ./ \;")
-os.system("rm -r */")
+os.system("rm -rf */")
 os.system("find . -type f ! -name '*.java' -o -name '*.xlsx' -o -name '*.csv' -delete")
+# os.system('rm -f !(*.xlsx|*.csv|*.java)')
 
 # os.system("cp " + parent_dir + "/commands.txt commands.txt")
 print("\n=> Directory Cleaning Done !!!")

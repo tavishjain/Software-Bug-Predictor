@@ -4,6 +4,9 @@ from pathlib import Path
 from subprocess import *
 
 def cartesian_product(left, right):
+	if right.empty == True:
+		right = pd.DataFrame(columns = ['Name', 'AvgCyclomatic', 'AvgCyclomaticModified', 'AvgCyclomaticStrict', 'AvgEssential', 'AvgLine', 'AvgLineBlank', 'AvgLineCode', 'AvgLineComment', 'CountDeclClass', 'CountDeclClassMethod', 'CountDeclClassVariable', 'CountDeclExecutableUnit', 'CountDeclFunction', 'CountDeclInstanceMethod', 'CountDeclInstanceVariable', 'CountDeclMethod', 'CountDeclMethodDefault', 'CountDeclMethodPrivate', 'CountDeclMethodProtected', 'CountDeclMethodPublic', 'CountLine', 'CountLineBlank', 'CountLineCode', 'CountLineCodeDecl', 'CountLineCodeExe', 'CountLineComment', 'CountSemicolon', 'CountStmt', 'CountStmtDecl', 'CountStmtExe', 'MaxCyclomatic', 'MaxCyclomaticModified', 'MaxCyclomaticStrict', 'MaxEssential', 'MaxNesting', 'RatioCommentToCode', 'SumCyclomatic', 'SumCyclomaticModified', 'SumCyclomaticStrict', 'SumEssential'])
+		right = right.append(pd.Series(0, index = right.columns), ignore_index=True)
 	return pd.concat([pd.concat([left]*len(right)).sort_index().reset_index(drop=True),
        pd.concat([right]*len(left)).reset_index(drop=True) ], 1)
 
@@ -39,75 +42,71 @@ os.chdir(repo_location)
 
 g = git.Git(os.getcwd())
 
-# INPUT FEATURES
-# 1. Number of File changes            - in git_whatchanged_parser.py and dataframe
-# 2. Number of LOC changes             - in git_whatchanged_parser.py and dataframe
-# 3. Developer info                    - in git_whatchanged_parser.py and dataframe
-# 4. Number of Distinct Contributors   - in git_whatchanged_parser.py and dataframe
-# 5. commit message                    - in git_whatchanged_parser.py and dataframe
-# 6. Commit time difference            - in git_whatchanged_parser.py and dataframe
-# 7. Size of modification              - done - in size_diff
-# 8. metrics                     - 
-
-size_diff = list()
-actual_size = list()
-
 df = pd.read_excel('whatchanged_data.xlsx')
+final_data = pd.DataFrame(columns=['Commit_Hash', 'Author', 'Date_Time', 'Commit_Message', 'Files_Changed', 'Insertions', 'Deletions', 'Bug_present', 'Commit_Time_Diff', 'Name', 'AvgCyclomatic', 'AvgCyclomaticModified', 'AvgCyclomaticStrict', 'AvgEssential', 'AvgLine', 'AvgLineBlank', 'AvgLineCode', 'AvgLineComment', 'CountDeclClass', 'CountDeclClassMethod', 'CountDeclClassVariable', 'CountDeclExecutableUnit', 'CountDeclFunction', 'CountDeclInstanceMethod', 'CountDeclInstanceVariable', 'CountDeclMethod', 'CountDeclMethodDefault', 'CountDeclMethodPrivate', 'CountDeclMethodProtected', 'CountDeclMethodPublic', 'CountLine', 'CountLineBlank', 'CountLineCode', 'CountLineCodeDecl', 'CountLineCodeExe', 'CountLineComment', 'CountSemicolon', 'CountStmt', 'CountStmtDecl', 'CountStmtExe', 'MaxCyclomatic', 'MaxCyclomaticModified', 'MaxCyclomaticStrict', 'MaxEssential', 'MaxNesting', 'RatioCommentToCode', 'SumCyclomatic', 'SumCyclomaticModified', 'SumCyclomaticStrict', 'SumEssential', 'is_changed'])
+final_data.to_excel('final_data.xlsx')
 
 for i in range(len(df['Commit_Hash'])):
-	if i == 0:
-		continue
+
 	commit = df['Commit_Hash'][i]
-	os.system('git checkout ' + commit)
-	print('Covering Commit #', commit)
+	# os.system('rm -f !(*.csv|*.xlsx)')
+	os.system("find . -type f ! -name '*.csv' -o -name '*.xlsx' -delete")
+	# os.system('git checkout ' + commit)
+	subprocess.check_output('git checkout ' + commit, shell = True)
+	print('\n============= Covering Commit #', commit, '=============')
 	all_commits_left = df.loc[df['Commit_Hash'] == commit]
 
-	# Run Sub-script
+	# Run Sub-script and generate metrics
 	os.chdir(parent_directory)	
-	os.system("python3 understand_metrics_parser.py " + repo_location)
+	# os.system("python3 understand_metrics_parser.py " + repo_location)
+	print('Starting directory cleaning and metrics generation.....')
+	subprocess.check_output("python3 understand_metrics_parser.py " + repo_location, shell=True)
 
 	# Changing directory updates file structure, otherwise it'll give FileNotFoundError
 	os.chdir(parent_directory)	
 	os.chdir(repo_location)
 
 	#Create dataframe and continue
-	new_file_name_metrics = 'metrics' + commit + '.csv'	
+	new_file_name_metrics = 'metrics' + commit + '.csv'
 	os.rename('metrics.csv', new_file_name_metrics)
 	metrics_df_right = pd.read_csv(new_file_name_metrics)
 	metrics_df_right = metrics_df_right.loc[metrics_df_right['Kind'] == 'File']
 	metrics_df_right = metrics_df_right[['Name', 'AvgCyclomatic', 'AvgCyclomaticModified', 'AvgCyclomaticStrict', 'AvgEssential', 'AvgLine', 'AvgLineBlank', 'AvgLineCode', 'AvgLineComment', 'CountDeclClass', 'CountDeclClassMethod', 'CountDeclClassVariable', 'CountDeclExecutableUnit', 'CountDeclFunction', 'CountDeclInstanceMethod', 'CountDeclInstanceVariable', 'CountDeclMethod', 'CountDeclMethodDefault', 'CountDeclMethodPrivate', 'CountDeclMethodProtected', 'CountDeclMethodPublic', 'CountLine', 'CountLineBlank', 'CountLineCode', 'CountLineCodeDecl', 'CountLineCodeExe', 'CountLineComment', 'CountSemicolon', 'CountStmt', 'CountStmtDecl', 'CountStmtExe', 'MaxCyclomatic', 'MaxCyclomaticModified', 'MaxCyclomaticStrict', 'MaxEssential', 'MaxNesting', 'RatioCommentToCode', 'SumCyclomatic', 'SumCyclomaticModified', 'SumCyclomaticStrict', 'SumEssential']]
 	metrics_df_right.to_csv(new_file_name_metrics)
 
+	#Part where we add per file difference column named "is_chagned"
+	if i == 0:
+		metrics_df_right['is_changed'] = 0
+	else:
+		previous_commit_filename = 'metrics' + df['Commit_Hash'][i-1] + '.csv'
+		previous_commit_df = pd.read_csv(previous_commit_filename)
+		req_cols_temp_df = [col for col in previous_commit_df.columns if col.lower()[:7] != 'unnamed']
+		previous_commit_df = previous_commit_df[req_cols_temp_df]
 
-	os.system("find . -type f ! -name '*.csv' -o -name '*.xlsx' -delete")
-	
+		previous_commit_df.set_index('Name')
+		metrics_df_right.set_index('Name')
+
+		same_rows_idx = previous_commit_df.isin(metrics_df_right).all(1)
+		# print(same_rows_idx)
+		metrics_df_right['is_changed'] = (~same_rows_idx).astype(int)	
+		metrics_df_right['is_changed'] =  metrics_df_right['is_changed'].fillna(1)
+		time.sleep(30)
+
+
 	os.chdir(parent_directory)	
 	os.chdir(repo_location)
 	#Add to final_data.csv
 	temp_df = cartesian_product(all_commits_left, metrics_df_right)
 	req_cols_temp_df = [col for col in temp_df.columns if col.lower()[:7] != 'unnamed']
 	temp_df = temp_df[req_cols_temp_df]
-	print(temp_df.info())
-	temp_df.to_excel(str(i) + '.xlsx')
-	# print(temp_df)
-	if os.path.isfile('final_data.xlsx'):
-		final_data = pd.read_excel('final_data.xlsx')
+	# temp_df.to_excel(str(i) + '.xlsx') #This is the cartesian product excel if you like to see
 
-		req_cols_final_data = [col for col in final_data.columns if col.lower()[:7] != 'unnamed']
-		final_data = final_data[req_cols_final_data]
-		print('Final Data before append: ', final_data.shape)
-		final_data = final_data.append(temp_df)
-		print('Final Data after append: ', final_data.shape)
-		print('Temp DF: ', temp_df.shape)
-		# time.sleep(10)
-		final_data.to_excel('final_data.xlsx')
-	else:
-		print('Generating First File.......')
-		final_data = temp_df
-
-		req_cols_final_data = [col for col in final_data.columns if col.lower()[:7] != 'unnamed']
-		final_data = final_data[req_cols_final_data]
-		print('Final Data: ', final_data.shape)
-		print('Temp DF: ', temp_df.shape)
-		time.sleep(10)
-		final_data.to_excel('final_data.xlsx')
+	final_data = pd.read_excel('final_data.xlsx')
+	req_cols_final_data = [col for col in final_data.columns if col.lower()[:7] != 'unnamed']
+	final_data = final_data[req_cols_final_data]
+	print('Final Data before append: ', final_data.shape)
+	final_data = final_data.append(temp_df)
+	print('Final Data after append: ', final_data.shape)
+	print('Temp DF: ', temp_df.shape)
+	# time.sleep(10)
+	final_data.to_excel('final_data.xlsx')
