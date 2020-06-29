@@ -43,14 +43,13 @@ os.chdir(repo_location)
 g = git.Git(os.getcwd())
 
 df = pd.read_excel('whatchanged_data.xlsx')
-final_data = pd.DataFrame(columns=['Commit_Hash', 'Author', 'Date_Time', 'Commit_Message', 'Files_Changed', 'Insertions', 'Deletions', 'Bug_present', 'Commit_Time_Diff', 'Name', 'AvgCyclomatic', 'AvgCyclomaticModified', 'AvgCyclomaticStrict', 'AvgEssential', 'AvgLine', 'AvgLineBlank', 'AvgLineCode', 'AvgLineComment', 'CountDeclClass', 'CountDeclClassMethod', 'CountDeclClassVariable', 'CountDeclExecutableUnit', 'CountDeclFunction', 'CountDeclInstanceMethod', 'CountDeclInstanceVariable', 'CountDeclMethod', 'CountDeclMethodDefault', 'CountDeclMethodPrivate', 'CountDeclMethodProtected', 'CountDeclMethodPublic', 'CountLine', 'CountLineBlank', 'CountLineCode', 'CountLineCodeDecl', 'CountLineCodeExe', 'CountLineComment', 'CountSemicolon', 'CountStmt', 'CountStmtDecl', 'CountStmtExe', 'MaxCyclomatic', 'MaxCyclomaticModified', 'MaxCyclomaticStrict', 'MaxEssential', 'MaxNesting', 'RatioCommentToCode', 'SumCyclomatic', 'SumCyclomaticModified', 'SumCyclomaticStrict', 'SumEssential', 'is_changed'])
+final_data = pd.DataFrame(columns=['index', 'Commit_Hash', 'Author', 'Date_Time', 'Commit_Message', 'Files_Changed', 'Insertions', 'Deletions', 'is_changed', 'Commit_Time_Diff', 'Name', 'AvgCyclomatic', 'AvgCyclomaticModified', 'AvgCyclomaticStrict', 'AvgEssential', 'AvgLine', 'AvgLineBlank', 'AvgLineCode', 'AvgLineComment', 'CountDeclClass', 'CountDeclClassMethod', 'CountDeclClassVariable', 'CountDeclExecutableUnit', 'CountDeclFunction', 'CountDeclInstanceMethod', 'CountDeclInstanceVariable', 'CountDeclMethod', 'CountDeclMethodDefault', 'CountDeclMethodPrivate', 'CountDeclMethodProtected', 'CountDeclMethodPublic', 'CountLine', 'CountLineBlank', 'CountLineCode', 'CountLineCodeDecl', 'CountLineCodeExe', 'CountLineComment', 'CountSemicolon', 'CountStmt', 'CountStmtDecl', 'CountStmtExe', 'MaxCyclomatic', 'MaxCyclomaticModified', 'MaxCyclomaticStrict', 'MaxEssential', 'MaxNesting', 'RatioCommentToCode', 'SumCyclomatic', 'SumCyclomaticModified', 'SumCyclomaticStrict', 'SumEssential'])
 
-results_dir = parent_directory + "/results"
-if os.path.isdir(results_dir) != True:
-	os.mkdir(results_dir)
-# writer = pd.ExcelWriter(results_dir)
-xlsx_file_name = path.split('/')[-1] + '_data.xlsx'
+results_dir = parent_directory + "/logs/training_data"
+
+xlsx_file_name = path.split('/')[-1] + '_training_data.xlsx'
 final_data.to_excel(results_dir + '/' + xlsx_file_name)
+print(results_dir)
 
 for i in range(len(df['Commit_Hash'])):
 
@@ -59,7 +58,7 @@ for i in range(len(df['Commit_Hash'])):
 	os.system("find . -type f ! -name '*.csv' -o -name '*.xlsx' -delete")
 	# os.system('git checkout ' + commit)
 	subprocess.check_output('git checkout ' + commit, shell = True)
-	print('\n============= Covering Commit #', commit, '=============')
+	print('\n============= Covering Commit #', (i+1), '| Hash:', commit, '=============')
 	all_commits_left = df.loc[df['Commit_Hash'] == commit]
 	all_commits_left['index'] = (i+1)
 
@@ -81,6 +80,9 @@ for i in range(len(df['Commit_Hash'])):
 	metrics_df_right = metrics_df_right[['Name', 'AvgCyclomatic', 'AvgCyclomaticModified', 'AvgCyclomaticStrict', 'AvgEssential', 'AvgLine', 'AvgLineBlank', 'AvgLineCode', 'AvgLineComment', 'CountDeclClass', 'CountDeclClassMethod', 'CountDeclClassVariable', 'CountDeclExecutableUnit', 'CountDeclFunction', 'CountDeclInstanceMethod', 'CountDeclInstanceVariable', 'CountDeclMethod', 'CountDeclMethodDefault', 'CountDeclMethodPrivate', 'CountDeclMethodProtected', 'CountDeclMethodPublic', 'CountLine', 'CountLineBlank', 'CountLineCode', 'CountLineCodeDecl', 'CountLineCodeExe', 'CountLineComment', 'CountSemicolon', 'CountStmt', 'CountStmtDecl', 'CountStmtExe', 'MaxCyclomatic', 'MaxCyclomaticModified', 'MaxCyclomaticStrict', 'MaxEssential', 'MaxNesting', 'RatioCommentToCode', 'SumCyclomatic', 'SumCyclomaticModified', 'SumCyclomaticStrict', 'SumEssential']]
 	metrics_df_right.to_csv(new_file_name_metrics)
 
+	def perform_and_for_bug(row):
+		return int(row)&int(df['Bug_present'][i])
+
 	#Part where we add per file difference column named "is_chagned"
 	if i == 0:
 		metrics_df_right['is_changed'] = 0
@@ -97,7 +99,7 @@ for i in range(len(df['Commit_Hash'])):
 		# print(same_rows_idx)
 		metrics_df_right['is_changed'] = (~same_rows_idx).astype(int)	
 		metrics_df_right['is_changed'] =  metrics_df_right['is_changed'].fillna(1)
-		time.sleep(30)
+		metrics_df_right['is_changed'].apply(perform_and_for_bug)
 
 
 	os.chdir(parent_directory)	
@@ -115,6 +117,12 @@ for i in range(len(df['Commit_Hash'])):
 	final_data = final_data.append(temp_df)
 	print('Final Data after append: ', final_data.shape)
 	print('Temp DF: ', temp_df.shape)
-	# time.sleep(10)
 	final_data.to_excel(results_dir + '/' + xlsx_file_name)
 
+
+# Drop Commit_Hash and is_changed columns
+data = pd.read_excel(results_dir + '/' + xlsx_file_name)
+req_cols_data = [col for col in data.columns if col.lower()[:7] != 'unnamed']
+data = data[req_cols_data]
+data.set_index('index', inplace = True)
+data.to_excel(results_dir + '/' + xlsx_file_name)

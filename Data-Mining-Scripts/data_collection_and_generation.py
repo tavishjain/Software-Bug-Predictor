@@ -14,6 +14,8 @@ if os.path.isdir("logs") != True:
 main_dir = os.getcwd()
 curr_dir = os.getcwd() + '/logs'
 os.chdir(curr_dir)
+if os.path.isdir("training_data") != True:
+	os.mkdir('training_data')
 clone_command = "git clone " + path
 os.system(clone_command)
 os.chdir(main_dir)
