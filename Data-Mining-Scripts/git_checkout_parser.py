@@ -55,6 +55,7 @@ for i in range(len(df['Commit_Hash'])):
 	subprocess.check_output('git checkout ' + commit, shell = True)
 	print('\n============= Covering Commit #', commit, '=============')
 	all_commits_left = df.loc[df['Commit_Hash'] == commit]
+	all_commits_left['index'] = (i+1)
 
 	# Run Sub-script and generate metrics
 	os.chdir(parent_directory)	
@@ -110,3 +111,4 @@ for i in range(len(df['Commit_Hash'])):
 	print('Temp DF: ', temp_df.shape)
 	# time.sleep(10)
 	final_data.to_excel('final_data.xlsx')
+
