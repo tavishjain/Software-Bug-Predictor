@@ -33,6 +33,7 @@ else:
     print ("You must specify a git object as the first argument")
     sys.exit(os.EX_NOINPUT)
 
+main_dir = os.getcwd()
 repo_location = str(path)
 os.chdir(repo_location)
 

@@ -23,7 +23,6 @@ else:
 	path = (path.split("/"))[-1]
 
 path = 'logs/' + path
-print('Pth: ', path)
 
 print("\n=========== Running WHATCHANGED script ===========")
 os.system("python3 git_whatchanged_parser.py " + path)

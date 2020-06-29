@@ -44,7 +44,13 @@ g = git.Git(os.getcwd())
 
 df = pd.read_excel('whatchanged_data.xlsx')
 final_data = pd.DataFrame(columns=['Commit_Hash', 'Author', 'Date_Time', 'Commit_Message', 'Files_Changed', 'Insertions', 'Deletions', 'Bug_present', 'Commit_Time_Diff', 'Name', 'AvgCyclomatic', 'AvgCyclomaticModified', 'AvgCyclomaticStrict', 'AvgEssential', 'AvgLine', 'AvgLineBlank', 'AvgLineCode', 'AvgLineComment', 'CountDeclClass', 'CountDeclClassMethod', 'CountDeclClassVariable', 'CountDeclExecutableUnit', 'CountDeclFunction', 'CountDeclInstanceMethod', 'CountDeclInstanceVariable', 'CountDeclMethod', 'CountDeclMethodDefault', 'CountDeclMethodPrivate', 'CountDeclMethodProtected', 'CountDeclMethodPublic', 'CountLine', 'CountLineBlank', 'CountLineCode', 'CountLineCodeDecl', 'CountLineCodeExe', 'CountLineComment', 'CountSemicolon', 'CountStmt', 'CountStmtDecl', 'CountStmtExe', 'MaxCyclomatic', 'MaxCyclomaticModified', 'MaxCyclomaticStrict', 'MaxEssential', 'MaxNesting', 'RatioCommentToCode', 'SumCyclomatic', 'SumCyclomaticModified', 'SumCyclomaticStrict', 'SumEssential', 'is_changed'])
-final_data.to_excel('final_data.xlsx')
+
+results_dir = parent_directory + "/results"
+if os.path.isdir(results_dir) != True:
+	os.mkdir(results_dir)
+# writer = pd.ExcelWriter(results_dir)
+xlsx_file_name = path.split('/')[-1] + '_data.xlsx'
+final_data.to_excel(results_dir + '/' + xlsx_file_name)
 
 for i in range(len(df['Commit_Hash'])):
 
@@ -102,7 +108,7 @@ for i in range(len(df['Commit_Hash'])):
 	temp_df = temp_df[req_cols_temp_df]
 	# temp_df.to_excel(str(i) + '.xlsx') #This is the cartesian product excel if you like to see
 
-	final_data = pd.read_excel('final_data.xlsx')
+	final_data = pd.read_excel(results_dir + '/' + xlsx_file_name)
 	req_cols_final_data = [col for col in final_data.columns if col.lower()[:7] != 'unnamed']
 	final_data = final_data[req_cols_final_data]
 	print('Final Data before append: ', final_data.shape)
@@ -110,5 +116,5 @@ for i in range(len(df['Commit_Hash'])):
 	print('Final Data after append: ', final_data.shape)
 	print('Temp DF: ', temp_df.shape)
 	# time.sleep(10)
-	final_data.to_excel('final_data.xlsx')
+	final_data.to_excel(results_dir + '/' + xlsx_file_name)
 
