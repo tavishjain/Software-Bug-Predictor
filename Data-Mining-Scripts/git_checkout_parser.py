@@ -3,15 +3,9 @@ from datetime import datetime
 from pathlib import Path
 from subprocess import *
 
-def cartesian_product(left, right):
-	if right.empty == True:
-		right = pd.DataFrame(columns = ['Name', 'AvgCyclomatic', 'AvgCyclomaticModified', 'AvgCyclomaticStrict', 'AvgEssential', 'AvgLine', 'AvgLineBlank', 'AvgLineCode', 'AvgLineComment', 'CountDeclClass', 'CountDeclClassMethod', 'CountDeclClassVariable', 'CountDeclExecutableUnit', 'CountDeclFunction', 'CountDeclInstanceMethod', 'CountDeclInstanceVariable', 'CountDeclMethod', 'CountDeclMethodDefault', 'CountDeclMethodPrivate', 'CountDeclMethodProtected', 'CountDeclMethodPublic', 'CountLine', 'CountLineBlank', 'CountLineCode', 'CountLineCodeDecl', 'CountLineCodeExe', 'CountLineComment', 'CountSemicolon', 'CountStmt', 'CountStmtDecl', 'CountStmtExe', 'MaxCyclomatic', 'MaxCyclomaticModified', 'MaxCyclomaticStrict', 'MaxEssential', 'MaxNesting', 'RatioCommentToCode', 'SumCyclomatic', 'SumCyclomaticModified', 'SumCyclomaticStrict', 'SumEssential'])
-		right = right.append(pd.Series(0, index = right.columns), ignore_index=True)
-	return pd.concat([pd.concat([left]*len(right)).sort_index().reset_index(drop=True),
-       pd.concat([right]*len(left)).reset_index(drop=True) ], 1)
-
 try:
     import git
+    from sklearn.preprocessing import LabelEncoder
     import xlrd
     import numpy as np
     import pandas as pd
@@ -20,11 +14,41 @@ except ImportError:
     os.system("pip3 install gitpython")
     os.system("pip3 install pandas")
     os.system("pip3 install numpy")
+    os.system("pip3 install sklearn")
     os.system("pip3 install xlrd")
     import git 
     import numpy as np
     import xlrd
     import pandas as pd
+
+# Custom Class for adjusting to new and unseen labels
+class LabelEncoderExt(object):
+    def __init__(self):
+        self.label_encoder = LabelEncoder()
+
+    def fit(self, data_list):
+        self.label_encoder = self.label_encoder.fit(list(data_list) + ['Unknown'])
+        self.classes_ = self.label_encoder.classes_
+
+        return self
+
+    def transform(self, data_list):
+        new_data_list = list(data_list)
+        for unique_item in np.unique(data_list):
+            if unique_item not in self.label_encoder.classes_:
+                new_data_list = ['Unknown' if x==unique_item else x for x in new_data_list]
+
+        return self.label_encoder.transform(new_data_list)
+    
+    def inverse_transform(self, data_list):
+        return self.label_encoder.inverse_transform(data_list)
+
+def cartesian_product(left, right):
+	if right.empty == True:
+		right = pd.DataFrame(columns = ['Name', 'AvgCyclomatic', 'AvgCyclomaticModified', 'AvgCyclomaticStrict', 'AvgEssential', 'AvgLine', 'AvgLineBlank', 'AvgLineCode', 'AvgLineComment', 'CountDeclClass', 'CountDeclClassMethod', 'CountDeclClassVariable', 'CountDeclExecutableUnit', 'CountDeclFunction', 'CountDeclInstanceMethod', 'CountDeclInstanceVariable', 'CountDeclMethod', 'CountDeclMethodDefault', 'CountDeclMethodPrivate', 'CountDeclMethodProtected', 'CountDeclMethodPublic', 'CountLine', 'CountLineBlank', 'CountLineCode', 'CountLineCodeDecl', 'CountLineCodeExe', 'CountLineComment', 'CountSemicolon', 'CountStmt', 'CountStmtDecl', 'CountStmtExe', 'MaxCyclomatic', 'MaxCyclomaticModified', 'MaxCyclomaticStrict', 'MaxEssential', 'MaxNesting', 'RatioCommentToCode', 'SumCyclomatic', 'SumCyclomaticModified', 'SumCyclomaticStrict', 'SumEssential'])
+		right = right.append(pd.Series(0, index = right.columns), ignore_index=True)
+	return pd.concat([pd.concat([left]*len(right)).sort_index().reset_index(drop=True),
+       pd.concat([right]*len(left)).reset_index(drop=True) ], 1)
 
 parser  =   optparse.OptionParser()
 
@@ -45,11 +69,12 @@ g = git.Git(os.getcwd())
 df = pd.read_excel('whatchanged_data.xlsx')
 final_data = pd.DataFrame(columns=['index', 'Commit_Hash', 'Author', 'Date_Time', 'Commit_Message', 'Files_Changed', 'Insertions', 'Deletions', 'is_changed', 'Commit_Time_Diff', 'Name', 'AvgCyclomatic', 'AvgCyclomaticModified', 'AvgCyclomaticStrict', 'AvgEssential', 'AvgLine', 'AvgLineBlank', 'AvgLineCode', 'AvgLineComment', 'CountDeclClass', 'CountDeclClassMethod', 'CountDeclClassVariable', 'CountDeclExecutableUnit', 'CountDeclFunction', 'CountDeclInstanceMethod', 'CountDeclInstanceVariable', 'CountDeclMethod', 'CountDeclMethodDefault', 'CountDeclMethodPrivate', 'CountDeclMethodProtected', 'CountDeclMethodPublic', 'CountLine', 'CountLineBlank', 'CountLineCode', 'CountLineCodeDecl', 'CountLineCodeExe', 'CountLineComment', 'CountSemicolon', 'CountStmt', 'CountStmtDecl', 'CountStmtExe', 'MaxCyclomatic', 'MaxCyclomaticModified', 'MaxCyclomaticStrict', 'MaxEssential', 'MaxNesting', 'RatioCommentToCode', 'SumCyclomatic', 'SumCyclomaticModified', 'SumCyclomaticStrict', 'SumEssential'])
 
-results_dir = parent_directory + "/logs/training_data"
+training_dir = parent_directory + "/logs/training_data"
+testing_dir = parent_directory + "/logs/testing_data"
 
 xlsx_file_name = path.split('/')[-1] + '_training_data.xlsx'
-final_data.to_excel(results_dir + '/' + xlsx_file_name)
-print(results_dir)
+final_data.to_excel(training_dir + '/' + xlsx_file_name)
+print(training_dir)
 
 for i in range(len(df['Commit_Hash'])):
 
@@ -80,9 +105,6 @@ for i in range(len(df['Commit_Hash'])):
 	metrics_df_right = metrics_df_right[['Name', 'AvgCyclomatic', 'AvgCyclomaticModified', 'AvgCyclomaticStrict', 'AvgEssential', 'AvgLine', 'AvgLineBlank', 'AvgLineCode', 'AvgLineComment', 'CountDeclClass', 'CountDeclClassMethod', 'CountDeclClassVariable', 'CountDeclExecutableUnit', 'CountDeclFunction', 'CountDeclInstanceMethod', 'CountDeclInstanceVariable', 'CountDeclMethod', 'CountDeclMethodDefault', 'CountDeclMethodPrivate', 'CountDeclMethodProtected', 'CountDeclMethodPublic', 'CountLine', 'CountLineBlank', 'CountLineCode', 'CountLineCodeDecl', 'CountLineCodeExe', 'CountLineComment', 'CountSemicolon', 'CountStmt', 'CountStmtDecl', 'CountStmtExe', 'MaxCyclomatic', 'MaxCyclomaticModified', 'MaxCyclomaticStrict', 'MaxEssential', 'MaxNesting', 'RatioCommentToCode', 'SumCyclomatic', 'SumCyclomaticModified', 'SumCyclomaticStrict', 'SumEssential']]
 	metrics_df_right.to_csv(new_file_name_metrics)
 
-	def perform_and_for_bug(row):
-		return int(row)&int(df['Bug_present'][i])
-
 	#Part where we add per file difference column named "is_chagned"
 	if i == 0:
 		metrics_df_right['is_changed'] = 0
@@ -99,7 +121,6 @@ for i in range(len(df['Commit_Hash'])):
 		# print(same_rows_idx)
 		metrics_df_right['is_changed'] = (~same_rows_idx).astype(int)	
 		metrics_df_right['is_changed'] =  metrics_df_right['is_changed'].fillna(1)
-		metrics_df_right['is_changed'].apply(perform_and_for_bug)
 
 
 	os.chdir(parent_directory)	
@@ -110,19 +131,29 @@ for i in range(len(df['Commit_Hash'])):
 	temp_df = temp_df[req_cols_temp_df]
 	# temp_df.to_excel(str(i) + '.xlsx') #This is the cartesian product excel if you like to see
 
-	final_data = pd.read_excel(results_dir + '/' + xlsx_file_name)
+	final_data = pd.read_excel(training_dir + '/' + xlsx_file_name)
 	req_cols_final_data = [col for col in final_data.columns if col.lower()[:7] != 'unnamed']
 	final_data = final_data[req_cols_final_data]
 	print('Final Data before append: ', final_data.shape)
 	final_data = final_data.append(temp_df)
 	print('Final Data after append: ', final_data.shape)
 	print('Temp DF: ', temp_df.shape)
-	final_data.to_excel(results_dir + '/' + xlsx_file_name)
+	final_data.to_excel(training_dir + '/' + xlsx_file_name)
+
+	if i == len(df['Commit_Hash'])-1:
+		temp_df.to_excel(testing_dir + '/' + path.split('/')[-1] + '_testing_data.xlsx')
 
 
 # Drop Commit_Hash and is_changed columns
-data = pd.read_excel(results_dir + '/' + xlsx_file_name)
+data = pd.read_excel(training_dir + '/' + xlsx_file_name)
 req_cols_data = [col for col in data.columns if col.lower()[:7] != 'unnamed']
 data = data[req_cols_data]
 data.set_index('index', inplace = True)
-data.to_excel(results_dir + '/' + xlsx_file_name)
+
+data = pd.concat([data, pd.get_dummies(data[['Author']])], axis=1)
+data = data.fillna(0)
+data['Bug_present'] = data['Bug_present'].astype(int)
+data['is_changed'] = data['is_changed'].astype(int)
+data['Bug_present'] = data['Bug_present'] & data['is_changed']
+data.drop(['Commit_Hash', 'Date_Time', 'Author', 'Commit_Message', 'is_changed'], axis = 1, inplace = True)
+data.to_excel(training_dir + '/' + xlsx_file_name)
