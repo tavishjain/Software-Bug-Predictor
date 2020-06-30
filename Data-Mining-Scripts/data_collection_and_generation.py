@@ -18,9 +18,13 @@ if os.path.isdir("training_data") != True:
 	os.mkdir('training_data')
 if os.path.isdir("testing_data") != True:
 	os.mkdir('testing_data')
+if os.path.isdir("results") != True:
+	os.mkdir('results')
+
 clone_command = "git clone " + path
 os.system(clone_command)
 os.chdir(main_dir)
+
 if (path.split("/"))[-1] == '':
 	path = (path.split("/"))[-2]
 else:
@@ -28,14 +32,20 @@ else:
 
 path = 'logs/' + path
 
-print("\n=========== Running WHATCHANGED script ===========")
-os.system("python3 git_whatchanged_parser.py " + path)
+# This is the 1st script
+if os.path.isdir(path) == False:
+	print("\n=========== Running WHATCHANGED script ===========")
+	os.system("python3 git_whatchanged_parser.py " + path)
 
 print("\n=========== Running CHECKOUT script ===========")
 os.system("python3 git_checkout_parser.py " + path)
 
-# print("\n=========== Collecting Metrics Data ===========")
-# os.system("python3 understand_metrics_parser.py " + path)
+
+
+# This goes in the second part, that is the second script
+# print("\n=========== Starting training ML Model ===========")
+# os.system("python3 training_ml_model.py " + path)
+
 
 # List of all collected metrics
 # AvgCyclomatic, AvgCyclomaticModified, AvgCyclomaticStrict, AvgEssential, AvgLine, AvgLineBlank, AvgLineCode, AvgLineComment, CountClassBase, CountClassCoupled, CountClassCoupledModified, CountClassDerived, CountDeclClass, CountDeclClassMethod, CountDeclClassVariable, CountDeclExecutableUnit, CountDeclFile, CountDeclFunction, CountDeclInstanceMethod, CountDeclInstanceVariable, CountDeclMethod, CountDeclMethodAll, CountDeclMethodDefault, CountDeclMethodPrivate, CountDeclMethodProtected, CountDeclMethodPublic, CountInput, CountLine, CountLineBlank, CountLineCode, CountLineCodeDecl, CountLineCodeExe, CountLineComment, CountOutput, CountPath, CountPathLog, CountSemicolon, CountStmt, CountStmtDecl, CountStmtExe, Cyclomatic, CyclomaticModified, CyclomaticStrict, Essential, Knots, MaxCyclomatic, MaxCyclomaticModified, MaxCyclomaticStrict, MaxEssential, MaxEssentialKnots, MaxInheritanceTree, MaxNesting, MinEssentialKnots, PercentLackOfCohesion, PercentLackOfCohesionModified, RatioCommentToCode, SumCyclomatic, SumCyclomaticModified, SumCyclomaticStrict, SumEssential
