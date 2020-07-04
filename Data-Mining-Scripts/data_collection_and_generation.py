@@ -33,7 +33,7 @@ else:
 path = 'logs/' + path
 
 # This is the 1st script
-if os.path.isdir(path) == False:
+if os.path.isfile(path + '/whatchanged_data.xlsx') == False:
 	print("\n=========== Running WHATCHANGED script ===========")
 	os.system("python3 git_whatchanged_parser.py " + path)
 
@@ -43,8 +43,8 @@ os.system("python3 git_checkout_parser.py " + path)
 
 
 # This goes in the second part, that is the second script
-# print("\n=========== Starting training ML Model ===========")
-# os.system("python3 training_ml_model.py " + path)
+print("\n=========== Starting training ML Model ===========")
+os.system("python3 training_ml_model.py " + path)
 
 
 # List of all collected metrics

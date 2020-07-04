@@ -2,7 +2,13 @@ Check out the repo's from android.googlesource.com
 Some of the Sample tested include 
 1. Calender (https://android.googlesource.com/platform/packages/apps/Calendar)
 2. Camera2 (https://android.googlesource.com/platform/packages/apps/Camera2)
-3. Popbuzz (https://github.com/tavishjain/Popbuzz)
+3. Popbuzz (https://github.com/tavishjain/Popbuzz) Complete
+4. Tracuer (https://android.googlesource.com/platform/packages/apps/Traceur) Complete
+5. Launcher3 (https://android.googlesource.com/platform/packages/apps/Launcher3)
+6. Browser2 (https://android.googlesource.com/platform/packages/apps/Browser2) Complete
+7. Gallery2 (https://android.googlesource.com/platform/packages/apps/Gallery2)
+8. Dialer (https://android.googlesource.com/platform/packages/apps/Dialer) Complete
+9. InCallUI (https://android.googlesource.com/platform/packages/apps/InCallUI)
 
 
 

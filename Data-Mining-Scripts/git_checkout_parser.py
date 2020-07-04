@@ -13,10 +13,12 @@ except ImportError:
     os.system("apt install python3-pip")
     os.system("pip3 install gitpython")
     os.system("pip3 install pandas")
+    os.system("apt-get install python3-git")
+    os.system("apt-get install libncurses5")
     os.system("pip3 install numpy")
     os.system("pip3 install sklearn")
     os.system("pip3 install xlrd")
-    import git 
+    import git
     import numpy as np
     from sklearn.preprocessing import LabelEncoder
     import xlrd
@@ -70,6 +72,8 @@ testing_data_file_name = path.split('/')[-1] + '_testing_data.xlsx'
 final_data.to_excel(training_dir + '/' + training_data_file_name)
 print(training_dir)
 
+total_num_of_commits = len(df['Commit_Hash'])
+
 for i in range(len(df['Commit_Hash'])):
 
 	commit = df['Commit_Hash'][i]
@@ -88,7 +92,8 @@ for i in range(len(df['Commit_Hash'])):
 		os.chdir(parent_directory)	
 		# os.system("python3 understand_metrics_parser.py " + repo_location)
 		print('Starting directory cleaning and metrics generation.....')
-		subprocess.check_output("python3 understand_metrics_parser.py " + repo_location, shell=True)
+		subprocess.check_output("python3 understand_metrics_parser.py " + repo_location, shell=True, stderr = subprocess.STDOUT)
+		print('Calculating metrics for Commit:', i, 'out of total:', total_num_of_commits)
 
 		# Changing directory updates file structure, otherwise it'll give FileNotFoundError
 		os.chdir(parent_directory)	
@@ -137,6 +142,7 @@ for i in range(len(df['Commit_Hash'])):
 	final_data = final_data.append(temp_df)
 	print('Final Data after append: ', final_data.shape)
 	print('Temp DF: ', temp_df.shape)
+	print('Done with Commit:', i, 'out of total:', total_num_of_commits)
 	final_data.to_excel(training_dir + '/' + training_data_file_name)
 
 	if i == len(df['Commit_Hash'])-1:
