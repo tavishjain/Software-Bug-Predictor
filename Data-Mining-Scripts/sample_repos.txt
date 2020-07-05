@@ -1,5 +1,6 @@
 Check out the repo's from android.googlesource.com
 Some of the Sample tested include 
+1. Calender (https://android.googlesource.com/platform/packages/apps/Calendar) Cancelling
 2. Camera2 (https://android.googlesource.com/platform/packages/apps/Camera2) Cancelling
 3. Popbuzz (https://github.com/tavishjain/Popbuzz) Complete
 4. Tracuer (https://android.googlesource.com/platform/packages/apps/Traceur) Complete
@@ -10,12 +11,17 @@ Some of the Sample tested include
 10. AlarmClock (https://android.googlesource.com/platform/packages/apps/AlarmClock) Complete
 11. FMRadio (https://android.googlesource.com/platform/packages/apps/FMRadio) COmplete
 14. SettingsIntelligence (https://android.googlesource.com/platform/packages/apps/SettingsIntelligence) Complete
+15. UniversalMediaPlayer (https://android.googlesource.com/platform/packages/apps/UniversalMediaPlayer) Complete
+9. InCallUI (https://android.googlesource.com/platform/packages/apps/InCallUI) Complete
+13. Music (https://android.googlesource.com/platform/packages/apps/Music) Complete
+17. Bluetooth (https://android.googlesource.com/platform/packages/apps/Bluetooth) # Canceling
 
-1. Calender (https://android.googlesource.com/platform/packages/apps/Calendar)
-9. InCallUI (https://android.googlesource.com/platform/packages/apps/InCallUI)
 12. LegacyCamera (https://android.googlesource.com/platform/packages/apps/LegacyCamera)
-13. Music (https://android.googlesource.com/platform/packages/apps/Music)
-15. UniversalMediaPlayer (https://android.googlesource.com/platform/packages/apps/UniversalMediaPlayer)
+16. Spring Pet clinic (https://github.com/spring-projects/spring-petclinic)
+18. NFC (https://android.googlesource.com/platform/packages/apps/Nfc)
+19. PackageInstaller (https://android.googlesource.com/platform/packages/apps/PackageInstaller)
+20. TV (https://android.googlesource.com/platform/packages/apps/TV)
+
 
 
 // To download understand metrics SDK
