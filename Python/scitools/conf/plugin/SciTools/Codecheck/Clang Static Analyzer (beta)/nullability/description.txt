@@ -1,0 +1,1 @@
+(Objective-C only) Checks for null or nullable pointers being passed, returned, or dereferenced when _Nonnull is specified.

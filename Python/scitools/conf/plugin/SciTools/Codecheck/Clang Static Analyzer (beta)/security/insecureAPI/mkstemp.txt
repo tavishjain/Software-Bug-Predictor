@@ -1,0 +1,1 @@
+(C) Warn when 'mkstemp' is passed fewer than 6 X's in the format string.

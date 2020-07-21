@@ -1,0 +1,12 @@
+<p><b>1.1.8.17. osx.cocoa.RetainCount (ObjC)</b><br>
+Check for leaks and improper reference count management</p>
+<p>Examples:
+<pre><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">test</span><span class="p">()</span> <span class="p">{</span>
+  <span class="bp">NSString</span> <span class="o">*</span><span class="n">s</span> <span class="o">=</span> <span class="p">[[</span><span class="bp">NSString</span> <span class="n">alloc</span><span class="p">]</span> <span class="n">init</span><span class="p">];</span> <span class="c1">// warn</span>
+<span class="p">}</span>
+
+<span class="n">CFStringRef</span> <span class="nf">test</span><span class="p">(</span><span class="kt">char</span> <span class="o">*</span><span class="n">bytes</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="n">CFStringCreateWithCStringNoCopy</span><span class="p">(</span>
+           <span class="mi">0</span><span class="p">,</span> <span class="n">bytes</span><span class="p">,</span> <span class="n">NSNEXTSTEPStringEncoding</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span> <span class="c1">// warn</span>
+<span class="p">}</span>
+</pre></div></pre></p>

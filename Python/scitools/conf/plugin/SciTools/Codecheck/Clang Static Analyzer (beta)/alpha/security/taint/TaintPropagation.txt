@@ -1,0 +1,1 @@
+(C, C++) Generate taint information used by other checkers. A data is tainted when it comes from an unreliable source.

@@ -1,0 +1,158 @@
+# This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson
+# Rewritten 2/2/15
+
+
+# Boiler Plate code
+use base ("Understand::Codecheck");
+use strict;
+
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => 'Undefined macro identifier %1 used incorrectly';
+use constant ERR2 => 'Undefined macro usage: %1';
+
+
+# This registers ERR1 with Understand
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+  $check->add_tr_text(ERR2);
+}
+
+sub checkID { return "MISRA04_19.11";}
+
+
+
+# This is the short error the Understand will use
+sub name { 
+  return '19.11 All macro identifiers in preprocessor directives shall be defined before use, except in #ifdef and #ifndef preprocessor directives and the defined() operator';
+}
+
+
+# This is the full description of the rule being tested
+sub description { 
+  return '19.11 ( Required ) All macro identifiers in preprocessor directives shall be defined before use, except in #ifdef and #ifndef preprocessor directives and the defined() operator.';
+}
+
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description { return <<"END_DESC"
+
+<p><b>Rationale</b><br>
+If an attempt is made to use an identifier in a preprocessor directive, and that identifier has not
+been defined, the preprocessor will sometimes not give any warning but will assume the value
+zero. #<i>ifdef</i>, #<i>ifndef</i> and <i>defined()</i> are provided to test the existence of a macro, and are therefore
+excluded.
+</p>
+
+<p><b>Example</b>
+</p>
+
+<pre style="margin-top:0;padding-top:0;">
+  #if x < 0 // Non-compliant - x assumed to be zero as it is not defined
+</pre>
+
+<p>
+Consideration should be given to the use of a <i>#ifdef</i> test before an identifier is used.<br>
+Note that preprocessing identifiers may be defined either by use of <i>#define</i> directives or by options
+specified at compiler invocation. However, the use of the <i>#define</i> directive is preferred.
+</p>
+
+END_DESC
+
+}
+
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+
+# This determines if this script is per file
+sub test_entity { 
+  return 1;
+}
+
+
+# This determines if this script is per project or per file
+sub test_global { 
+  return 0;
+}
+
+
+# Any defined options go here
+sub define_options{
+}
+
+
+# This is the actual test being performed on the user's code
+sub check {
+
+  # Pull the name of the check and the name of the file from the incoming script request
+  my $check = shift; 
+  my $file = shift;
+  return unless $file->kind->check( 'C File' );
+  
+  # Loop through all macros and check and check if they are unknown
+  my @unknownMacros = $file->filerefs( 'Use', 'C Unknown Macro' );
+  
+  # Start loop of unknown macros found
+  MCRO : foreach my $macro ( @unknownMacros ) {
+
+    my $lexeme = $macro->lexeme;
+
+    # Sometimes the macro references have a column of 0, if so, we need tomove the lexeme to the correct spot
+    if ( $lexeme->text ne $macro->ent->simplename ) {
+      while ( $lexeme and $lexeme->text ne $macro->ent->simplename ) {
+        $lexeme = $lexeme->nextUseful;
+      }
+    }
+    next MCRO unless $lexeme;
+
+    # Test if lexeme is inactive
+    next MCRO if $lexeme->inactive;
+
+    # Save the original lexeme in case the use refence has a bad column number
+    my $originalLexeme = $lexeme;
+
+    # Set a token flag and look at macro usage
+    my $goodToken;
+    while ( $lexeme ) {
+
+      # If we see a test for definition, we are good and can move on
+      next MCRO if $lexeme->text eq 'ifdef';
+      next MCRO if $lexeme->text eq 'ifndef';
+      next MCRO if $lexeme->text eq 'defined';
+
+      # If we see connecting tokens, then we are good
+      $goodToken = 0;
+      $goodToken = 1 if $lexeme->text eq '(';
+      $goodToken = 1 if $lexeme->text eq '||';
+      $goodToken = 1 if $lexeme->text eq '&&';
+      $goodToken = 1 if $lexeme->text eq '>';
+      $goodToken = 1 if $lexeme->text eq '>=';
+      $goodToken = 1 if $lexeme->text eq '<';
+      $goodToken = 1 if $lexeme->text eq '<=';
+      $goodToken = 1 if $lexeme->text eq '==';
+      $goodToken = 1 if $lexeme->token eq 'Identifier';
+
+      # Throw error if we are not looking at a good token
+      unless ( $goodToken ) {
+
+        $check->violation( $macro->ent, $macro->file, $originalLexeme->line_begin, $originalLexeme->column_begin, ERR1, $macro->ent->name );
+        next MCRO;
+
+      }
+
+      $lexeme = $lexeme->prevUseful;
+
+    }
+
+    # This should not happen, has special error code
+    $check->violation( $macro->ent, $macro->file, $macro->line, $macro->column, ERR2, $macro->ent->name );
+
+  }
+}

@@ -1,0 +1,157 @@
+# This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson
+# 1-12-15
+
+
+# Boiler Plate code
+use base ( 'Understand::Codecheck' );
+use strict;
+
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => 'Function or object %1, has external linkage but is only used in the translation unit built from %2.';
+
+
+# This registers ERR1 with Understand
+sub register_tr_text {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+sub checkID { return "MISRA12_8.7";}
+
+
+
+# This is the short error the Understand will use
+sub name{
+  return '8.7 Functions and objects should not be defined with external linkage if they are referenced in only one translation unit';
+}
+
+
+# This is the full description of the rule being tested
+sub description {
+  return '8.7 (Global)(Advisory) Functions and objects should not be defined with external linkage if they are referenced in only one translation unit.';
+}
+
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description {
+  return  <<"END_DESC"
+
+<p><b>Rationale</b><br>
+Restricting the visibility of an object by giving it internal linkage or no linkage reduces the chance that
+it might be accessed inadvertently. Similarly, reducing the visibility of a function by giving it internal
+linkage reduces the chance of it being called inadvertently.
+</p>
+
+<p>
+Compliance with this rule also avoids any possibility of confusion between an identifier and an identical
+identifier in another translation unit or a library.
+</p>
+
+<p><b>Developer's Note</b><br>
+This check works with both the strict and fuzzy parser. While using the strict parser; however, it is important
+to note that this check will not function properly if errors are reported.
+</p>
+
+<p><b>Check Limitations</b><br>
+This check cannot detect if a function is contained within an anonymous namespace, these cases will, unfortunately,
+throw a false positive.
+</p>
+
+END_DESC
+}
+
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language eq "C++";
+}
+
+
+# This determines if this script is run per file
+sub test_entity {
+  return 0;
+}
+
+
+# This determines if this script is run on the whole project
+sub test_global {
+  return 1;
+}
+
+
+# Any defined options go here
+sub define_options {
+}
+
+
+# This is the actual test being performed on the user's code
+sub check {
+
+	# Pull everything from the calling function and ensure we are looking at a C file
+	my $check = shift;
+	my @allFiles = $check->get_files;
+	my %violationsSeen = ();
+  
+	FILE : foreach my $file ( @allFiles ) {
+
+  	next FILE unless $file->kind->check( 'C Code File' );
+
+    # Create a hash reference to store all files for this translation unit and loop through all of them
+    my $filesToCheck = {};
+    $filesToCheck = buildTranslationUnit( $file, $filesToCheck );  
+
+    while( my ( $fileName, $fileData ) = each %$filesToCheck ) {  
+
+        # Pull all the unique define and declare references present in this file and loop through each one
+    	my @globalReferences = $fileData->filerefs( 'Define, Declare', 'Function ~Unresolved ~Unknown ~Static ~Macro ~Template, Object Global ~Static ~Unresolved ~Unknown', 1 );
+    	GBL : foreach my $global ( @globalReferences ) {  
+
+    		# Skip if this entity does not exist in the global scope or is main
+    		my $parent = $global->ent->parent;
+        next unless $parent;
+        
+    		next GBL unless $parent->kind->check( 'C File' );
+    		next GBL if $global->ent->name eq 'main';
+
+        # This is a special case for functions that should be declared static but are friends with a class ( C++ Compatibility )
+        next GBL if $global->ent->ref( 'C Friendby' );
+
+    		# Check each reference associated with this entity, if one of them isn't within the translation unit, then this entity passes
+    		my @allRefs = $global->ent->refs;
+    		foreach my $ref ( @allRefs ) {
+    			next GBL unless exists $$filesToCheck{ $ref->file->name };
+    		}  
+
+    		# This entity is in the global scope and all references are within this translation unit, throw error unless we've seen it before
+    		next GBL if exists $violationsSeen{ $global->ent->uniquename };
+    		$violationsSeen{ $global->ent->uniquename } = 1;
+    		$check->violation( $global->ent, $global->file, $global->line, $global->column, ERR1, $global->ent->name, $file->name );  
+
+    	}
+    }
+	}
+}
+
+
+# This recursive function builds my translation unit
+sub buildTranslationUnit {
+
+	# Pull information from upper level and add this file to the hash to signify it has been checked
+	my $file = shift;
+	my $filesToCheck = shift;
+	$filesToCheck->{ $file->name } = $file;
+
+	# Pull all files that this file include and recursivly check
+	my @includedFiles = $file->filerefs( 'Include' );
+	INC : foreach my $include ( @includedFiles ) {
+
+		# Skip this file if it has already been checked
+		next INC if exists $$filesToCheck{ $include->ent->name };
+		$filesToCheck = buildTranslationUnit( $include->ent, $filesToCheck );
+
+	}
+	return $filesToCheck;
+}

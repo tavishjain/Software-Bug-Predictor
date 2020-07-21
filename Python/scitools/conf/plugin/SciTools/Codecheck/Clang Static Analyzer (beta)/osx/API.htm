@@ -1,0 +1,8 @@
+<p><b>1.1.8.1. osx.API (C)</b><br>
+Check for proper uses of various Apple APIs.</p>
+<p>Examples:
+<pre><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">test</span><span class="p">()</span> <span class="p">{</span>
+  <span class="n">dispatch_once_t</span> <span class="n">pred</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+  <span class="n">dispatch_once</span><span class="p">(</span><span class="o">&amp;</span><span class="n">pred</span><span class="p">,</span> <span class="o">^</span><span class="p">(){});</span> <span class="c1">// warn: dispatch_once uses local</span>
+<span class="p">}</span>
+</pre></div></pre></p>

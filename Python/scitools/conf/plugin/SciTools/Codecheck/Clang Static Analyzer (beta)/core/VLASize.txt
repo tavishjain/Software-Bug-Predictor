@@ -1,0 +1,1 @@
+(C) Check for declarations of Variable Length Arrays of undefined or zero size.

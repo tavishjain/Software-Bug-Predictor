@@ -1,0 +1,64 @@
+html{
+    margin: 0;
+   	min-height: 100%;
+}
+body{
+    margin: 0;
+   	min-height: 100%;
+   	background-color: #A8D0E6;
+   	text-align: center;
+   	vertical-align: middle;
+}
+nav{
+	background-color: #F76C6C;
+	color: #fff !important;
+	display: flex;
+	justify-content:space-between; 
+	border-radius: 0.3rem;
+	
+}
+article{
+	text-align: center;
+}
+.searchtron{
+	background-color: #374758;
+	color: #fff !important;
+	margin-top: 2%;
+	height: 55%;
+}
+.line {
+	border-color: #F8E981; 
+}
+.search-btn{
+	font-weight: 700;
+	border-width: 0.25em;
+	margin-top: 0.25em;
+}
+
+.poptron{
+	background-color: #374758;
+	color: #fff !important;
+	margin: auto;
+	padding-top: 1.5%;
+	height: 25%;
+	width: 50%;
+	border-radius: 0.3rem;
+	display: none;
+}
+
+.checkmark {
+	font-family: arial;
+	font-weight: 700;
+	font-size: 1em;
+	color:#00ffff;
+	transform: scaleX(-1) rotate(-35deg);
+	display: none;
+	
+  }
+.spin{
+	display: none;
+}
+.visible{
+	display: inline-block;
+}
+  

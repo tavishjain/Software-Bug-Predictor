@@ -1,0 +1,15 @@
+<p><b>1.1.8.25. osx.coreFoundation.CFRetainRelease (C)</b><br>
+Check for null arguments to CFRetain/CFRelease/CFMakeCollectable.</p>
+<p>Examples:
+<pre><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">test</span><span class="p">(</span><span class="n">CFTypeRef</span> <span class="n">p</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">p</span><span class="p">)</span>
+    <span class="n">CFRetain</span><span class="p">(</span><span class="n">p</span><span class="p">);</span> <span class="c1">// warn</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="nf">test</span><span class="p">(</span><span class="kt">int</span> <span class="n">x</span><span class="p">,</span> <span class="n">CFTypeRef</span> <span class="n">p</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">p</span><span class="p">)</span>
+    <span class="k">return</span><span class="p">;</span>
+
+  <span class="n">CFRelease</span><span class="p">(</span><span class="n">p</span><span class="p">);</span> <span class="c1">// warn</span>
+<span class="p">}</span>
+</pre></div></pre></p>

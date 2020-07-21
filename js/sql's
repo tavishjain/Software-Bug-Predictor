@@ -1,0 +1,149 @@
+CREATE TABLE `icat_master_data_upload_report_prod`(
+	 `jobID` varchar(100) NOT NULL,
+	 `date` varchar(100) NOT NULL,
+	 `userStatus` varchar(100) NOT NULL,
+	 `status` boolean NOT NULL,
+	 `startTime` long NOT NULL,
+	 `endTime` long NOT NULL,
+	 `totalTimeTaken` long NOT NULL,
+	 `indexReportList` longtext NOT NULL,
+	 `switchedIndices` longtext NOT NULL,
+	 PRIMARY KEY (`jobID`)
+)ENGINE=InnoDB;
+
+--------------------------------
+
+CREATE TABLE `icat_masterdata_confNextStatusiguration_prod` (
+`sheetName` varchar(100) NOT NULL,
+`indexName` varchar(100) NOT NULL,
+`headerMap` longtext NOT NULL,
+PRIMARY KEY (`sheetName`)
+ )
+ENGINE = InnoDB;
+
+-------------------------
+
+*mergeindicestart*
+CREATE TABLE `icat_merge_indicesconfiguration_prod`(
+	`indexName` varchar(100) NOT NULL,
+	`endpoint` varchar(100) NOT NULL,
+	`mergeindicestart` longtext NOT NULL,
+	PRIMARY KEY (`indexName`)
+)ENGINE = InnoDB;
+
+---------------------------------
+
+CREATE TABLE `icat_upload_operations_prod`(
+	`id` varchar(100) NOT NULL,
+	`status` int NOT NULL,
+	`message` varchar(500) NOT NULL,
+	`sheetName` varchar(100) NOT NULL,
+	`currenttime` long NOT NULL,
+	`totalRowsInExcel` int NOT NULL,
+	`totalAddedRows` int NOT NULL,
+	PRIMARY KEY (`id`)
+)ENGINE = InnoDB;
+
+
+--------------------------------
+
+
+
+*ValidationConfiguration.ValidationConfigurationObj configurationObj; FOR THIS configurationObj WAS USED* 
+
+CREATE TABLE
+`icat_validation_configuration_prod`(
+	`id` varchar(100) NOT NULL,
+	`configType` varchar(100) NOT NULL,
+	`configurationObj` longtext NOT NULL,
+	PRIMARY KEY (`id`)
+
+)ENGINE = InnoDB;
+
+``````````````````````````````````
+
+*ValidationConfiguration.ValidationConfigurationObj configurationObj; FOR THIS configurationObj WAS USED* 
+
+CREATE TABLE
+`icat_warning_configuration_prod`(
+	`id` varchar(100) NOT NULL,
+	`configType` varchar(100) NOT NULL,
+	`configurationObj` longtext NOT NULL,
+	PRIMARY KEY (`id`)
+
+)ENGINE = InnoDB;
+
+----------------------------------
+
+CREATE TABLE
+`icat_FetchApiTimestamp_prod`(
+	`entryNumber` varchar(100) NOT NULL,
+	`fetchContractStatusApiTimestamp`
+	long NOT NULL,
+	`fetchChildAgreementStatusTimestamp` long NOT NULL,
+	`fetchContractDocumentWorkflowStatusTimestamp` long NOT NULL,
+	`fetchChildAgreementStatusApiCounter` long NOT NULL,
+	`fetchContractWorkFlowStatusApiCounter` long NOT NULL,
+	PRIMARY KEY (`entryNumber`)	
+
+)ENGINE = InnoDB;
+
+----------------------------------
+
+*no primary ke specified*
+
+CREATE TABLE 
+`icat_StatusChangeAction_prod`(
+	`status` varchar(100) NOT NULL,
+	`nextStatusList` longtext
+)ENGINE = InnoDB;
+
+---------------------------------
+
+CREATE TABLE
+`icat_auto_increment_prod1`(
+	`id` 	varchar(100) NOT NULL,
+	`iCatReferenceNumber` long NOT NULL,
+	PRIMARY KEY (`id`)		
+)ENGINE = InnoDB;
+
+---------------------------------
+
+CREATE TABLE
+`icat_clm_request_xml_prod`(
+	`id` varchar(100) NOT NULL,
+	`xml` varchar(500) NOT NULL,
+	PRIMARY KEY (`id`)
+)ENGINE = InnoDB;
+
+-----------------------------
+
+*for id @DynamoDBAttribute is not mentioned still treating as primary key*
+
+CREATE TABLE
+`icat_excel_configuration_prod`(
+	`id` varchar(100) NOT NULL,
+	`primaryKey` varchar(100) NOT NULL,
+  `sheetName` varchar(100) DEFAULT 'HUL',
+  `parentHeaders` boolean NOT NULL,
+  `fieldDescription` longtext NOT NULL,
+  `parentHeaderColor` longtext NOT NULL,
+  `headers` longtext NOT NULL,
+ 	 PRIMARY KEY (`id`) 
+)ENGINE = InnoDB;
+
+
+----------------------------------------------------
+
+*TINYTEXT - 64KB MEDIUMTEXT - 16MB LONGTEXT - 4GB*
+
+CREATE TABLE
+`icat_fetch_contract_status_log_prod`(
+	`fetchApiCounter` long NOT NULL,
+	`startTime` varchar(100) NOT NULL,
+	`endTime` varchar(100) NOT NULL,
+	`responseCode` TINYTEXT NOT NULL,
+	`responseJson` MEDIUMTEXT NOT NULL,
+	`error` MEDIUMTEXT NOT NULL,
+	PRIMARY KEY(fetchApiCounter)
+)ENGINE = InnoDB;

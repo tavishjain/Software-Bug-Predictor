@@ -1,0 +1,1 @@
+(ObjC) Warns against using one vs. many plural pattern in code when generating localized strings.

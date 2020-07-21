@@ -1,0 +1,19 @@
+<p><b>1.2.6.4. alpha.osx.cocoa.MissingInvalidationMethod (ObjC)</b><br>
+Check that the invalidation methods are present in classes that contain invalidatable instance variables.</p>
+<p>Examples:
+<pre><div class="highlight"><pre><span></span><span class="k">@protocol</span> <span class="nc">Invalidation</span> <span class="o">&lt;</span><span class="bp">NSObject</span><span class="o">&gt;</span>
+<span class="o">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">invalidate</span>
+  <span class="n">__attribute__</span><span class="p">((</span><span class="n">annotate</span><span class="p">(</span><span class="s">"objc_instance_variable_invalidator"</span><span class="p">)));</span>
+<span class="k">@end</span>
+
+<span class="k">@interface</span> <span class="nc">NeedInvalidation</span> : <span class="bp">NSObject</span> <span class="o">&lt;</span><span class="n">Invalidation</span><span class="o">&gt;</span>
+<span class="k">@end</span>
+
+<span class="k">@interface</span> <span class="nc">MissingInvalidationMethodDecl</span> : <span class="bp">NSObject</span> <span class="p">{</span>
+  <span class="n">NeedInvalidation</span> <span class="o">*</span><span class="n">Var</span><span class="p">;</span> <span class="c1">// warn</span>
+<span class="p">}</span>
+<span class="k">@end</span>
+
+<span class="k">@implementation</span> <span class="nc">MissingInvalidationMethodDecl</span>
+<span class="k">@end</span>
+</pre></div></pre></p>

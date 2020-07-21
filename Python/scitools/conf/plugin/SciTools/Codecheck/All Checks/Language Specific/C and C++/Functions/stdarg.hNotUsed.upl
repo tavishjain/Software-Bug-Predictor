@@ -1,0 +1,107 @@
+#This script is designed to run with Understand - CodeCheck
+use base ("Understand::Codecheck");
+use strict;
+
+
+use constant ERR1 => 'stdarg.h should not be used.';
+
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+
+sub checkID { return "CPP_F021";}
+
+sub name { return "The features of <stdarg.h> shall not be used";}
+
+sub description { return "(Required) The features of <stdarg.h> shall not be used";}
+
+sub detailed_description { return <<"END_DESC"
+<p><b>Amplification</b><br>
+None of <i>va_list</i>, <i>va_arg</i>, <i>va_start</i>, <i>va_end</i> and, for C99, <i>va_copy</i> shall be used.
+</p>
+
+<p><b>Rationale</b><br>
+The Standard lists many instances of undefined behaviour associated with the features of
+<stdarg.h>, including:
+<ul>
+  <li>
+    <i>va_end</i> not being used prior to end of a function in which <i>va_start</i> was used;
+  </li>
+  <li>
+    <i>va_arg</i> being used in different functions on the same <i>va_li</i> st;
+  </li>
+  <li>
+    The type of an argument not being compatible with the type specified to <i>va_arg</i>.
+  </li>
+</ul>
+</p>
+
+<p><b>Example</b><br>
+<pre style="margin-top:0;padding-top:0;">
+#include <stdarg.h>
+
+void h ( va_list ap )           /* Non-compliant */
+{
+   double y;
+
+   y = va_arg ( ap, double );   /* Non-compliant */
+}
+
+void f ( uint16_t n, ... )
+{
+   uint32_t x;
+
+   va_list ap;                  /* Non-compliant */
+
+   va_start ( ap, n );          /* Non-compliant */
+   x = va_arg ( ap, uint32_t ); /* Non-compliant */
+
+   h ( ap );
+
+   /* undefined - ap is indeterminate because va_arg used in h ( ) */
+   x = va_arg ( ap, uint32_t ); /* Non-compliant */
+
+   /* undefined - returns without using va_end ( ) */
+}
+
+void g ( void )
+{
+   /* undefined - uint32_t:double type mismatch when f uses va_arg ( ) */
+   f ( 1, 2.0, 3.0 );
+}
+</pre>
+</p>
+
+END_DESC
+}
+
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+sub test_entity { return 1;}
+
+sub test_global { return 0;}
+
+sub define_options {
+  my $check = shift;
+}
+
+our %seen;
+sub check {
+  my $check = shift; 
+  my $file = shift;
+  return unless $file->kind->check("c file ~unknown ~unresolved");
+  my @refs = $file->refs("include","file",1);
+  foreach my $ref (@refs){
+    if ($ref->ent->name() eq 'stdarg.h'){
+      $check->violation($ref->ent,$file,$ref->line,$ref->column,ERR1);
+      return;
+    }
+    
+  }
+}
+

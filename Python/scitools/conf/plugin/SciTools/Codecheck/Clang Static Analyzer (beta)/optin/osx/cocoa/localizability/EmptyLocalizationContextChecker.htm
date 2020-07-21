@@ -1,0 +1,10 @@
+<p><b>1.1.5.3. optin.osx.cocoa.localizability.EmptyLocalizationContextChecker (ObjC)</b><br>
+Check that NSLocalizedString macros include a comment for context.</p>
+<p>Examples:
+<pre><div class="highlight"><pre><span></span><span class="p">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">test</span> <span class="p">{</span>
+  <span class="bp">NSString</span> <span class="o">*</span><span class="n">string</span> <span class="o">=</span> <span class="n">NSLocalizedString</span><span class="p">(</span><span class="s">@"LocalizedString"</span><span class="p">,</span> <span class="nb">nil</span><span class="p">);</span> <span class="c1">// warn</span>
+  <span class="bp">NSString</span> <span class="o">*</span><span class="n">string2</span> <span class="o">=</span> <span class="n">NSLocalizedString</span><span class="p">(</span><span class="s">@"LocalizedString"</span><span class="p">,</span> <span class="s">@" "</span><span class="p">);</span> <span class="c1">// warn</span>
+  <span class="bp">NSString</span> <span class="o">*</span><span class="n">string3</span> <span class="o">=</span> <span class="n">NSLocalizedStringWithDefaultValue</span><span class="p">(</span>
+    <span class="s">@"LocalizedString"</span><span class="p">,</span> <span class="nb">nil</span><span class="p">,</span> <span class="p">[[</span><span class="bp">NSBundle</span> <span class="n">alloc</span><span class="p">]</span> <span class="n">init</span><span class="p">],</span> <span class="nb">nil</span><span class="p">,</span><span class="s">@""</span><span class="p">);</span> <span class="c1">// warn</span>
+<span class="p">}</span>
+</pre></div></pre></p>

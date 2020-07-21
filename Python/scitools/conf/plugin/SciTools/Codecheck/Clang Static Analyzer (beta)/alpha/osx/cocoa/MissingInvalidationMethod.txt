@@ -1,0 +1,1 @@
+(ObjC) Check that the invalidation methods are present in classes that contain invalidatable instance variables.

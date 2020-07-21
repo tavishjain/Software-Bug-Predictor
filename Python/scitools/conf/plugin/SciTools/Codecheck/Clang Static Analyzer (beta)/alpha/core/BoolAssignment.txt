@@ -1,0 +1,1 @@
+(ObjC) Warn about assigning non-{0,1} values to boolean variables.

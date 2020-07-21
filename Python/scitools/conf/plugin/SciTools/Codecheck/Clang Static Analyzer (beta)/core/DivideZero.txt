@@ -1,0 +1,1 @@
+(C, C++, ObjC) Check for division by zero.

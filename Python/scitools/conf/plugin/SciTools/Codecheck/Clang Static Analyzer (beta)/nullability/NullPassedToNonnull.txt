@@ -1,0 +1,1 @@
+(ObjC) Warns when a null pointer is passed to a pointer which has a _Nonnull type.

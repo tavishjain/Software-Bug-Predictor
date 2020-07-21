@@ -1,0 +1,153 @@
+# This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson
+# 1-16-15
+
+
+# Boiler Plate code
+use base ( 'Understand::Codecheck' );
+use strict;
+
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => 'Array %1 size is not expllicitly specified.';
+use constant ERR2 => 'Irregular Array declaration. %1 cannot be tested.';
+
+
+# This registers ERR1 with Understand
+sub register_tr_text {
+
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+  $check->add_tr_text(ERR2);
+
+}
+
+sub checkID { return "MISRA12_8.11";}
+
+
+
+# This is the short error the Understand will use
+sub name{
+  return '8.11 When an array with external linkage is declared, its size should be explicitly specified';
+}
+
+
+# This is the full description of the rule being tested
+sub description {
+  return '8.11 ( Advisory ) When an array with external linkage is declared, its size should be explicitly specified.';
+}
+
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description {
+  return  <<"END_DESC"
+
+<p><b>Amplification</b><br>
+This rule applies to non-defining declarations only. It is possible to define an array and specify its size
+implicitly by means of initialization.
+</p>
+
+<p><b>Rationale</b><br>
+Although it is possible to declare an array with incomplete type and access its elements, it is safer
+to do so when the size of the array may be explicitly determined. Providing size information for each
+declaration permits them to be checked for consistency. It may also permit a static checker to perform
+some array bounds analysis without needing to analyse more than one translation unit.
+</p>
+
+<p><b>Example</b><br>
+</p>
+
+<pre style="margin-top:0;padding-top:0;">
+
+  extern int32_t array1[ 10 ];  /* Compliant      */
+  extern int32_t array2[ ];     /* Non-compliant  */
+
+</pre>
+
+END_DESC
+}
+
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language eq "C++";
+}
+
+
+# This determines if this script is run per file
+sub test_entity {
+  return 1;
+}
+
+
+# This determines if this script is run on the whole project
+sub test_global {
+  return 0;
+}
+
+
+# Any defined options go here
+sub define_options {
+}
+
+
+# This is the actual test being performed on the user's code
+sub check {
+
+  # Pull the name of the check and the name of the file from the incoming script request
+  my $check = shift; 
+  my $file = shift;
+  return unless $file->kind->check( 'C File' );
+
+  # Pull everything that is declared in our file
+  my @declares = $file->filerefs( 'Declare', 'Object GLobal' );
+  
+  # Loop through each declaration and make sure all arrays have a defined size.
+  DEC : foreach my $dec ( @declares ) {
+
+    # Skip if we are not looking at an array, spin a lexer if we are
+    next DEC unless $dec->ent->type =~ /\[\w*\]/;
+    my $lexeme = $dec->lexeme;
+    $lexeme = $lexeme->nextUseful;
+
+    # Check the declaration
+    while ( $lexeme and $lexeme->text ne ';' ) {
+
+      # First item should be an open bracket, unable to test if not
+      if ( ! $lexeme or $lexeme->text ne '[' ) {
+
+        $check->violation( $dec->ent, $dec->file, $dec->line, $dec->column, ERR2, $dec->ent->name );
+        next DEC;
+
+      }
+
+      # Second item should be an identifier, if it is not an identifier, we have either and error or a violation
+      $lexeme = $lexeme->nextUseful;
+      if ( $lexeme and $lexeme->text !~ /\w+/ ) {
+
+        # If we see a closing bracket, we have a violation; otherwise, something strange is happening
+        if ( $lexeme->text eq ']' ) {
+          $check->violation( $dec->ent, $dec->file, $dec->line, $dec->column, ERR1, $dec->ent->name );
+        } else {
+          $check->violation( $dec->ent, $dec->file, $dec->line, $dec->column, ERR2, $dec->ent->name );  
+        }
+        next DEC;
+
+      }
+
+      # Make sure we have a closing bracket
+      $lexeme = $lexeme->nextUseful;
+      if ( ! $lexeme or $lexeme->text ne ']' ) {
+
+        $check->violation( $dec->ent, $dec->file, $dec->line, $dec->column, ERR2, $dec->ent->name );
+        next DEC;
+
+      }
+
+      # Prepare for next iteration
+      $lexeme = $lexeme->nextUseful;
+
+    }
+  }
+}

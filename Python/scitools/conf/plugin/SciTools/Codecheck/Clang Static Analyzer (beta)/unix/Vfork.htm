@@ -1,0 +1,27 @@
+<p><b>1.1.7.5. unix.Vfork (C)</b><br>
+Check for proper usage of <code class="docutils literal notranslate"><span class="pre">vfork</span></code>.</p>
+<p>Examples:
+<pre><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">test</span><span class="p">(</span><span class="kt">int</span> <span class="n">x</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kt">pid_t</span> <span class="n">pid</span> <span class="o">=</span> <span class="n">vfork</span><span class="p">();</span> <span class="c1">// warn</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">pid</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+
+  <span class="k">switch</span> <span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">case</span> <span class="mi">0</span><span class="o">:</span>
+    <span class="n">pid</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="n">execl</span><span class="p">(</span><span class="s">""</span><span class="p">,</span> <span class="s">""</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+    <span class="n">_exit</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+    <span class="k">break</span><span class="p">;</span>
+  <span class="k">case</span> <span class="mi">1</span><span class="o">:</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="c1">// warn: this assignment is prohibited</span>
+    <span class="k">break</span><span class="p">;</span>
+  <span class="k">case</span> <span class="mi">2</span><span class="o">:</span>
+    <span class="n">foo</span><span class="p">();</span> <span class="c1">// warn: this function call is prohibited</span>
+    <span class="k">break</span><span class="p">;</span>
+  <span class="k">default</span><span class="o">:</span>
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span> <span class="c1">// warn: return is prohibited</span>
+  <span class="p">}</span>
+
+  <span class="k">while</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div></pre></p>

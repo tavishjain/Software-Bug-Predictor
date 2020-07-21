@@ -1,0 +1,268 @@
+{
+  "display-name":      "Light Theme",
+  "description":       "The official light theme supported by Scientific Toolworks, Inc.",
+  "defaults": {
+    "explanation":     "Colors are grouped by background. Variants such as active, inactive, and disabled are optional.",
+    "group-1": {
+      "background":    "#ffffff",
+      "accent-1":      "#3466ba",
+      "accent-1-text": "#f8fbfe",
+      "border":        "#dfdfdf",
+      "error":         "#93263c",
+      "link":          "#2211c7",
+      "link-visited":  "#c383cf",
+      "placeholder":   "#989898",
+      "text":          "#080808",
+      "warning":       "#f15a22"
+    },
+    "group-2": {
+      "background":    "#ececec",
+      "border":        "#bebebe",
+      "accent-1":      "#3466ba",
+      "accent-1-text": "#f8fbfe",
+      "tab":           "#ffffff",
+      "tab-text":      "#080808",
+      "text":          "#545555"
+    },
+    "group-3": {
+      "background":    "#d4d4d4",
+      "text":          {"active": "#545555", "disabled": "#949494", "inactive": "#949494"},
+      "accent-1":      "#3466ba",
+      "toggled":       "#bdbdbd"
+    },
+    "group-4": {
+      "background":    "#bfbfbf",
+      "border":        "#7f7f7f",
+      "text":          {"active": "#545555", "disabled": "#7a7b7b"},
+      "accent-1":      "#3466ba"
+    }
+  },
+  "editor": {
+    "explanation":     "Editor descriptions can be found at scintilla.org",
+    "caret": {
+      "background":    "#e9e9e9"
+    },
+    "comment": {
+      "foreground":    "#0000ff",
+      "italic":         true,
+      "underline":      false
+    },
+    "deadcode": {
+      "background":    "#C0C0C0"
+    },
+    "doc-comment": {
+      "foreground":    "#993300",
+      "italic":         true
+    },
+    "doc-keyword": {
+      "bold":           true,
+      "foreground":    "#663300",
+      "italic":         true
+    },
+    "double-quoted-string": {
+      "foreground":    "#cc0000"
+    },
+    "error": {
+      "background":    "#ff0000",
+      "eol-filled":     true,
+      "foreground":    "#ffff00"
+    },
+    "find": {
+      "background":    "#ff0000"
+    },
+    "fold-margin": {
+      "background":    "#c0c0c0"
+    },
+    "identifier": {
+
+    },
+    "inactive": {
+      "background":    "#ffdddd",
+      "eol-filled":     true
+    },
+    "keyword": {
+      "bold":           true,
+      "foreground":    "#000080"
+    },
+    "label": {
+      "foreground":    "#800000"
+    },
+    "ada": {
+      "global-variable": {
+        "bold":         true,
+        "foreground":  "#003366"
+      },
+      "local-variable": {
+        "foreground":  "#003366",
+        "italic":       true
+      },
+      "subprogram": {
+        "foreground":  "#800000"
+      },
+      "type": {
+        "underline":    true
+      }
+    },
+    "c#": {
+      "class": {
+        "underline":    true
+      },
+      "enumerator": {
+        "foreground":  "#0080ff",
+        "underline":    true
+      },
+      "method": {
+        "foreground":  "#800000"
+      },
+      "type": {
+        "underline":    true
+      }
+    },
+    "c++": {
+      "class": {
+        "underline":    true
+      },
+      "enumerator": {
+        "foreground":  "#0080ff"
+      },
+      "function": {
+        "foreground":  "#800000"
+      },
+      "global-variable": {
+        "bold":         true,
+        "foreground":  "#003366"
+      },
+      "local-variable": {
+        "foreground":  "#003366"
+      },
+      "macro": {
+        "bold":         true,
+        "foreground":  "#800080"
+      },
+      "member-function": {
+        "foreground":  "#800000",
+        "italic":       true
+      },
+      "member-variable": {
+        "foreground":  "#003366",
+        "italic":       true
+      },
+      "parameter": {
+        "foreground":  "#004d66"
+      },
+      "type": {
+        "underline":    true
+      },
+      "virtual-function": {
+        "bold":         true,
+        "foreground":  "#800000",
+        "italic":       true
+      }
+    },
+    "fortran": {
+      "subprogram": {
+        "foreground":  "#800000"
+      },
+      "type": {
+        "underline":    true
+      }
+    },
+    "java": {
+      "class": {
+        "underline":    true
+      },
+      "interface": {
+        "underline":    true
+      },
+      "method": {
+        "foreground":  "#800000"
+      }
+    },
+    "jovial": {
+      "subroutine": {
+        "foreground":  "#800000"
+      },
+      "type": {
+        "underline":    true
+      }
+    },
+    "pascal": {
+      "routine": {
+        "foreground":  "#800000"
+      },
+      "type": {
+        "underline":    true
+      }
+    },
+    "python": {
+      "class": {
+        "underline":    true
+      },
+      "function": {
+        "foreground":  "#800000"
+      }
+    },
+    "vhdl": {
+      "process": {
+        "foreground":  "#800000"
+      },
+      "subprogram": {
+        "foreground":  "#800000"
+      },
+      "type": {
+        "underline":    true
+      }
+    },
+    "number": {
+      "foreground":    "#008080"
+    },
+    "operator": {
+      "bold":           true,
+      "underline":      false
+    },
+    "preprocessor": {
+      "bold":           true,
+      "foreground":    "#008000"
+    },
+    "ref": {
+      "background":    "#00ff00"
+    },
+    "selection": {
+      "background":    "#ccccff",
+      "eol-filled":     true
+    },
+    "single-quoted-string": {
+      "foreground":    "#800080"
+    },
+    "linenumber": {
+      "background":    "#a0a0a0",
+      "foreground":    "#000000"
+    },
+    "brace-light": {
+      "background":    "#00ff00",
+      "bold":           true
+    },
+    "brace-bad": {
+      "background":    "#ff0000",
+      "bold":           true
+    },
+    "unclosed-double-quoted-string": {
+      "background":    "#e0c0e0",
+      "eol-filled":     true
+    },
+    "unclosed-single-quoted-string": {
+      "background":    "#e0c0e0",
+      "eol-filled":     true
+    },
+    "whitespace": {
+      "foreground":    "#808080"
+    }
+  },
+  "other": {
+    "play-button":     "#89D185",
+    "shadow":          "#000000",
+    "status-text":     "#c383cf",
+    "tab-text":        {"active": "#000000", "out-of-project": "#000000", "unresolved": "#000000"},
+    "unused":          "#fc28fc"
+  }
+}

@@ -1,0 +1,189 @@
+# This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson
+# Rewritten 1/17/2017
+
+
+# Boiler Plate code
+use base ("Understand::Codecheck");
+use strict;
+
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => '"defined" preprocessor operator not used in one of the two standard forms';
+use constant ERR2 => 'MACRO used as the "defined" preprocessor operator';
+
+
+# This registers ERR1 with Understand
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text( ERR1 );
+  $check->add_tr_text( ERR2 );
+}
+
+
+# Unique Identifier
+sub checkID { return "CPP_P007"; }
+
+
+# This is the short error the Understand will use
+sub name { 
+  return "The defined preprocessor operator shall only be used in one of the two standard forms";
+}
+
+
+# This is the full description of the rule being tested
+sub description { 
+  return "( Required ) The defined preprocessor operator shall only be used in one of the two standard forms.";
+}
+
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description { 
+  return <<"END_DESC"
+
+  <p><b>Rationale</b><br>
+  The only two permissible forms for the defined preprocessor operator are:
+  </p>
+
+  <p>
+  <i>defined</i> <i>(</i> identifier <i>)</i>
+  </p>
+
+  <p>
+  <i>defined</i> identifier
+  </p>
+
+  <p>
+  Any other form leads to undefined behaviour, for example:
+  </p>
+
+  <p><b>Example</b>
+  </p>
+
+  <pre style="margin-top:0;padding-top:0;">
+    #if defined ( X > Y ) // Non-compliant – constraint violation
+  </pre>
+
+  <p>
+  Generation of the token defined during expansion of a #if or #elif preprocessing directive also
+  leads to undefined behaviour and shall be avoided, for example:
+  </p>
+
+  <pre style="margin-top:0;padding-top:0;">
+    #define DEFINED defined
+    #if DEFINED(X) // Non-compliant - undefined behaviour
+  </pre>
+
+  <p><b>Developer's Note:</b><br>
+  This check will trigger a violation where a macro is defined as the 'defined' preprocessor operator instead of where the macro is used.
+  This is done to prevent an excessive number of violations for a macro that is used multiple times.
+  </p>
+
+END_DESC
+}
+
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+
+# This determines if this script is per file
+sub test_entity { return 1;}
+
+
+# This determines if this script is per project or per file
+sub test_global { return 0;}
+
+
+# Any defined options go here
+sub define_options{}
+
+
+# This function takes a MACRO reference and returns that entities base MACRO type
+sub getBaseMacroType {
+
+  # Pull parameter and make temporary copy
+  my $macro = shift;
+  my $baseMacro = $macro;
+  my %seen;
+  $seen{$baseMacro->ent->id}=1;
+
+  # Keep pulling parent MACRO definition until we find the base MACRO
+  while ( $baseMacro->ent->ref( 'C Use Macrodefine' )) {
+    $baseMacro = $baseMacro->ent->ref( 'C Use Macrodefine' );
+    if (  $seen{$baseMacro->ent->id}){
+      return $baseMacro;
+    }
+    $seen{$baseMacro->ent->id}=1;
+  }
+
+  # Return the base MACRO back
+  return $baseMacro;
+
+}
+
+
+#This subroutine examines the usage of defined for compliance
+sub checkDefined {
+
+  my $file = shift;
+  my $check = shift;
+  my $lexeme = shift;
+
+  # Pull argument and move foreward one
+  $lexeme = $lexeme->nextUseful;
+  $lexeme = $lexeme->nextUseful if $lexeme->text eq '(';
+
+  if ( ( $lexeme->prevUseful->text eq '(' and $lexeme->nextUseful->text eq ')' ) or ( $lexeme->prevUseful->text eq 'defined' and $lexeme->token eq 'Identifier' ) ) {
+    return;
+  }
+  $check->violation( $file, $file, $lexeme->line_begin, $lexeme->column_begin, ERR1 );
+
+}
+
+
+# This is the actual test being performed on the user's code
+sub check {
+
+  # Pull the name of the check and the name of the file from the incoming script request
+  my $check = shift; 
+  my $file = shift;
+  return unless $file->kind->check( 'C File' );
+
+  # Pull all MACROs defined in this file and check to see if they're use improperly
+  my @macrosDefined = $file->filerefs( 'Define', 'Macro', 1 );
+  foreach my $macro ( @macrosDefined ) {
+
+    my $baseMacro = getBaseMacroType( $macro );
+    if ( $baseMacro->ent->type eq 'defined' ) {
+      foreach my $violations ( $macro->ent->refs( 'C Useby Macrodefine' ) ) {
+        $check->violation( $violations->scope, $violations->file, $violations->line, $violations->column, ERR2 );
+      }
+    }
+
+  }
+ 
+  # This check requires use of the Understand lexer. Initialize and check for failure 
+  my $lexer = $file->lexer( );
+  return unless $lexer;
+  
+  # $lexeme is intialized as the first element returned from the lexer
+  my $lexeme = $lexer->first();
+
+  # While the lexer has lexemes ...
+  while ( $lexeme ) {
+
+    #Yield to GUI interupts
+    $check->yield();
+    return if $check->is_abort();
+    
+    if ( $lexeme->token eq 'Preprocessor' and $lexeme->text eq 'defined' ) {
+      checkDefined( $file, $check, $lexeme );
+    }
+
+    $lexeme = $lexeme->nextUseful;
+  }
+}

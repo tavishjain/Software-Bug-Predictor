@@ -1,0 +1,8 @@
+<p><b>1.1.8.22. osx.cocoa.VariadicMethodTypes (ObjC)</b><br>
+Check for passing non-Objective-C types to variadic collection initialization methods that expect only Objective-C types.</p>
+<p>Examples:
+<pre><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">test</span><span class="p">()</span> <span class="p">{</span>
+  <span class="p">[</span><span class="bp">NSSet</span> <span class="nl">setWithObjects</span><span class="p">:</span><span class="s">@"Foo"</span><span class="p">,</span> <span class="s">"Bar"</span><span class="p">,</span> <span class="nb">nil</span><span class="p">];</span>
+    <span class="c1">// warn: argument should be an ObjC pointer type, not 'char *'</span>
+<span class="p">}</span>
+</pre></div></pre></p>

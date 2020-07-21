@@ -1,0 +1,10 @@
+<p><b>1.2.2.5. alpha.core.DynamicTypeChecker (ObjC)</b><br>
+Check for cases where the dynamic and the static type of an object are unrelated.</p>
+<p>Examples:
+<pre><div class="highlight"><pre><span></span><span class="kt">id</span> <span class="n">date</span> <span class="o">=</span> <span class="p">[</span><span class="bp">NSDate</span> <span class="n">date</span><span class="p">];</span>
+
+<span class="c1">// Warning: Object has a dynamic type 'NSDate *' which is</span>
+<span class="c1">// incompatible with static type 'NSNumber *'"</span>
+<span class="bp">NSNumber</span> <span class="o">*</span><span class="n">number</span> <span class="o">=</span> <span class="n">date</span><span class="p">;</span>
+<span class="p">[</span><span class="n">number</span> <span class="n">doubleValue</span><span class="p">];</span>
+</pre></div></pre></p>

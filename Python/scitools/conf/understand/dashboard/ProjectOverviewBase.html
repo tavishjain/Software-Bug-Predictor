@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Project Overview</title>
+    STYLING_AND_SCRIPTS
+  </head>
+
+  <body>
+    <nav id="main-nav" class="nav">
+      <div id="upper-nav">
+          <img id=und-icon src="understand-logo.png" alt="Understand">
+      </div>
+      <div class="navbar" style="position:relative;z-index:1003">
+        <button onclick="pageToTop()" id="pagedesc" title="Return to top of page">DASHBOARD_TITLE</button>
+      </div>
+      <div id="lower-nav" class=navbar>
+        <div class="rightspacer" id="rightspacer"></div>
+        <div id="main-dropdown-html" class="dropdown" tabindex="0">
+          <button id="dropdown-button" class="dropbtn">Contents <img id="dropdown-icon" src="ToCdropdown.png" style="height:12px"></button>
+          <div id="dropdown-buffer" class="dropdown-border"></div>
+          <div id="nav-dropdown-content" class="dropdown-content">
+            <a href="table_of_contents.html">Table of Contents</a>
+            <txt style="font-size: 12px; text-align: center">Enable javascript to use dropdown table of contents</txt>
+          </div>
+        </div>
+        <div class="navCenter" id="genDate"><navGenDate>GENERATED_DATE</navGenDate></div>
+      </div>
+    </nav>
+
+    <script type="text/javascript">navbar();</script>
+    <script type="text/javascript">
+      if (typeof ToC === 'undefined') {
+        document.getElementById("dropdown-button").remove();
+        document.getElementById("dropdown-buffer").remove();
+        document.getElementById("nav-dropdown-content").remove();
+      }
+    </script>
+
+  <div id="main-content"
+    <!--Table and divs that hold the pie charts-->
+    <table class="columns">
+      <tr>
+        <td><div id="area1" style="border: 1px solid #ccc"></div></td>
+        <td><div id="area2" style="border: 1px solid #ccc"></div></td>
+      </tr>
+      <tr>
+        <td><div id="area3" style="border: 1px solid #ccc"></div></td>
+        <td><div id="area4" style="border: 1px solid #ccc"></div></td>  
+      </tr>
+      <tr>
+        <td><div id="area5" style="border: 1px solid #ccc"></div></td>
+        <td><div id="area6" style="border: 1px solid #ccc"></div></td>
+      </tr>
+      <tr>
+        <td><div id="area7" style="border: 1px solid #ccc"></div></td>
+        <td><div id="area8" style="border: 1px solid #ccc"></div></td>
+      </tr>
+      <tr>
+        <td><div id="area9" style="border: 1px solid #ccc"></div></td>
+        <td><div id="area10" style="border: 1px solid #ccc"><embed id="extraMetrics" src="title_overview.html" width="100%" align="center"></div></td>
+      </tr>
+    </table>
+    
+    <center><p><div class="scitools-tag">Scientific Toolworks, Inc.<br></div><div class="scitools-link"><A href="mailto:support@scitools.com">support@scitools.com</A><br><A target="_blank" href="http://www.scitools.com">www.scitools.com</A></div></center>
+
+    AREA1_HTML
+    AREA2_HTML
+    AREA3_HTML
+    AREA4_HTML
+    AREA5_HTML
+    AREA6_HTML
+    AREA7_HTML
+    AREA8_HTML
+    AREA9_HTML
+
+    <script type="text/javascript">
+      window.PLOTLYENV={'BASE_URL': 'http://www.scitools.com'};
+        
+
+      window.onload = function() {
+          var height = (window.innerWidth /2) -25;
+          var barHeight = (window.innerWidth /2) -20;
+          document.getElementById("area10").setAttribute("style", "border: 1px solid #ccc; height:" + barHeight + "px");
+          document.getElementById("extraMetrics").setAttribute("style", "height:" + barHeight + "px");
+      }
+      
+      window.onresize = function() {
+
+        var width = (window.innerWidth /2) -25;
+        var height = (window.innerWidth /2) -25;
+        var barHeight = (window.innerWidth /2) -20;
+        var update = {
+          width: width,  //
+          height: barHeight  //
+        };
+        pie1.updateProp("size.canvasWidth", width);
+        pie1.updateProp("size.canvasHeight", height);
+        pie1.redraw();
+        pie2.updateProp("size.canvasWidth", width);
+        pie2.updateProp("size.canvasHeight", height);
+        pie2.redraw();
+        pie3.updateProp("size.canvasWidth", width);
+        pie3.updateProp("size.canvasHeight", height);
+        pie3.redraw();
+        
+        Plotly.relayout("area4", update);
+        Plotly.relayout("area5", update);
+        Plotly.relayout("area6", update);
+        Plotly.relayout("area7", update);
+        Plotly.relayout("area8", update);
+        Plotly.relayout("area9", update);
+        
+        document.getElementById("area10").setAttribute("style", "border: 1px solid #ccc; height:" + barHeight + "px");
+        document.getElementById("extraMetrics").setAttribute("style", "height:" + barHeight + "px"); 
+        };
+
+       
+        Plotly.newPlot("area4",  figure4.data, figure4.layout, {"linkText": "Show in Understand", "showLink": false, "displayModeBar": false})
+        Plotly.newPlot("area5",  figure5.data, figure5.layout, {"linkText": "Show in Understand", "showLink": false, "displayModeBar": false})
+        Plotly.newPlot("area6",  figure6.data, figure6.layout, {"linkText": "Show in Understand", "showLink": false, "displayModeBar": false})
+        Plotly.newPlot("area7",  figure7.data, figure7.layout, {"linkText": "Show in Understand", "showLink": false, "displayModeBar": false})
+        Plotly.newPlot("area8",  figure8.data, figure8.layout, {"linkText": "Show in Understand", "showLink": false, "displayModeBar": false})
+        Plotly.newPlot("area9",  figure9.data, figure9.layout, {"linkText": "Show in Understand", "showLink": false, "displayModeBar": false})
+        
+    </script>
+  </div>
+  </body>
+</html>
+

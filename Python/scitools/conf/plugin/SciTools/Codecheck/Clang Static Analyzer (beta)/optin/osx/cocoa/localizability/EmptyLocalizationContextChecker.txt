@@ -1,0 +1,1 @@
+(ObjC) Check that NSLocalizedString macros include a comment for context.

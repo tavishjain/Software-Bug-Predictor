@@ -1,0 +1,1 @@
+(ObjC) Warns about uses of non-localized NSStrings passed to UI methods expecting localized NSStrings.

@@ -1,0 +1,10 @@
+<p><b>1.2.3.3. alpha.cplusplus.InvalidatedIterator (C++)</b><br>
+Check for use of invalidated iterators.</p>
+<p>Examples:
+<pre><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">bad_copy_assign_operator_list1</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">list</span> <span class="o">&amp;</span><span class="n">L1</span><span class="p">,</span>
+                                    <span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">list</span> <span class="o">&amp;</span><span class="n">L2</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">auto</span> <span class="n">i0</span> <span class="o">=</span> <span class="n">L1</span><span class="p">.</span><span class="n">cbegin</span><span class="p">();</span>
+  <span class="n">L1</span> <span class="o">=</span> <span class="n">L2</span><span class="p">;</span>
+  <span class="o">*</span><span class="n">i0</span><span class="p">;</span> <span class="c1">// warn: invalidated iterator accessed</span>
+<span class="p">}</span>
+</pre></div></pre></p>

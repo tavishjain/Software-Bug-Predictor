@@ -1,0 +1,124 @@
+#This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson
+# 9-23-14
+
+
+# Boiler Plate code
+use base ("Understand::Codecheck");
+use strict;
+use experimental 'smartmatch';
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => "Violation: trigraph found: ??%1";
+
+
+# This registers ERR1 with Understand
+sub register_tr_text {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+sub checkID { return "MISRA12_4.2";}
+
+
+
+# This is the short error the Understand will use
+sub name{
+  return '4.2 Trigraphs should not be used';
+}
+
+
+# This is the full description of the rule being tested
+sub description {
+  return "4.2 ( Advisory ) Trigraphs should not be used.";
+}
+
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description {
+  return  <<"END_DESC"
+
+<p><b>Rationale</b><br>
+Trigraphs are denoted by a sequence of two question marks followed by a specified third character
+(e.g. ??- represents a ~ (tilde) character and ??) represents a ] ). They can cause accidental confusion
+with other uses of two question marks.</p>
+
+<p>
+Note: the so-called digraphs:</p>
+
+<p>
+<: :> <% %> %: %:%:</p>
+
+<p>
+are permitted because they are tokens. Trigraphs are replaced wherever they appear in the program
+prior to preprocessing.</p>
+
+<p><b>Example</b><br>
+For example the string
+</p>
+
+<pre style="margin-top:0;padding-top:0;">
+
+  "(Date should be in the form ??-??-??)"
+
+</pre>
+
+<p>
+would not behave as expected, actually being interpreted by the compiler as
+</p>
+
+<pre style="margin-top:0;padding-top:0;">
+
+  "(Date should be in the form ~~]"
+
+</pre>
+
+END_DESC
+}
+
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language eq "C++";
+}
+
+
+# This determines if this script is per file
+sub test_entity {
+  return 1;
+}
+
+
+# This determines if this script is per project or per file
+sub test_global {
+  return 0;
+}
+
+
+# Any defined options go here
+sub define_options{}
+
+
+# This is the actual test being performed on the user's code
+# This code was copied from MISRA 2008 rule 2-3-1
+sub check {
+  my $check = shift;
+  my $file = shift;
+  return unless $file->kind->check('file');
+  
+  my $con = $file->contents;
+  my $line = 1;
+  
+  while ($con =~ m! \G (.*?) \?\? (.) !sixg) {
+    my ($before, $specifier) = ($1, $2);
+    
+    while ($before =~ m/\r\n|\n|\r/g) {
+      $line++;
+    }
+    next unless $specifier =~ /[=\/'\(\)!<>-]/;
+    $check->violation(0, $file, $line, -1, ERR1, $specifier);
+  }
+  
+  return;
+}

@@ -1,0 +1,117 @@
+html{
+    margin: 0;
+   	min-height: 100%;
+}
+body{
+    margin: 0;
+   	min-height: 100%;
+   	background-color: #A8D0E6;
+   	/* text-align: center; */
+   	vertical-align: middle;
+}
+nav{
+	background-color: #F76C6C;
+	color: #fff !important;
+	display: flex;
+	justify-content:space-between;
+	/* position: fixed; */
+	
+}
+
+.titletron{
+	background-color: #374758;
+	color: #fff !important;
+	height: 3em;
+	width: 100%;
+	/* padding-top: 1em;
+	padding-bottom: 1em; */
+	/* border-radius: 0.3rem; */
+	/* top: 3em; */
+	position: relative;
+	/* display: none; */
+	margin-bottom: 1em;
+}
+
+.title{
+	font-size: 1.2em;
+	font-weight: 600;
+	width: 20%;
+	height: 1em;
+	top: 0.4em;
+	left: 44%;
+	/* background-color: brown; */
+	position: absolute;
+	/* margin-left: 10em; */
+}
+
+.filter{
+	/* display: inline; */
+	width: 5%;
+	height: 1.5em;
+	top: 0.1em;
+	left: 90%;
+	/* background-color: darkblue; */
+	position: absolute;
+	/* margin-left: 8em; */
+}
+
+.search-btn{
+	font-weight: 700;
+	border-width: 0.25em;
+	margin-top: 0.25em;
+}
+
+.element{
+	margin-top: 1em;
+	margin-left: auto;
+	margin-right: auto;
+	margin-bottom: 1em;
+	width: 92%;
+	height: 7em;
+	background-color:#9e2a2b;
+	border-radius: 1rem;
+	position: relative;
+	color: ghostwhite;
+}
+
+.elementtitle{
+	position: absolute;
+	font-size: 2em;
+	font-weight: 600;
+	left: 7%;
+	top: 5%;
+}
+.elementsize{
+	position: absolute;
+	font-size: 1em;
+	font-weight: 600;
+	right: 5%;
+	top: 60%;
+}
+
+.elementdate{
+	position: absolute;
+	font-size: 1em;
+	font-weight: 600;
+	right: 5%;
+	top: 10%;	
+}
+
+
+
+.elementupdate{
+	position: absolute;
+	font-size: 1em;
+	font-weight: 600;
+	right: 5%;
+	top: 35%;
+}
+
+.gotoelement{
+	position: absolute;
+	font-size: 1em;
+	font-weight: 700;
+	left: 7%;
+	top: 50%;
+	border-width: .2em;	
+}

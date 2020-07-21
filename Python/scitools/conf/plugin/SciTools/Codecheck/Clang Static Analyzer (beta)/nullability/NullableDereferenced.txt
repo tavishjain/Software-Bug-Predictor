@@ -1,0 +1,1 @@
+(ObjC) Warns when a nullable pointer is dereferenced.

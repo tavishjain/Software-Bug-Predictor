@@ -1,0 +1,10 @@
+<p><b>1.1.8.16. osx.cocoa.ObjCGenerics (ObjC)</b><br>
+Check for type errors when using Objective-C generics.</p>
+<p>Examples:
+<pre><div class="highlight"><pre><span></span><span class="bp">NSMutableArray</span> <span class="o">*</span><span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="bp">NSMutableArray</span> <span class="n">array</span><span class="p">];</span>
+<span class="bp">NSMutableArray</span> <span class="o">*</span><span class="n">birthDates</span> <span class="o">=</span> <span class="n">names</span><span class="p">;</span>
+
+<span class="c1">// Warning: Conversion from value of type 'NSDate *'</span>
+<span class="c1">// to incompatible type 'NSString *'</span>
+<span class="p">[</span><span class="n">birthDates</span> <span class="nl">addObject</span><span class="p">:</span> <span class="p">[</span><span class="bp">NSDate</span> <span class="n">date</span><span class="p">]];</span>
+</pre></div></pre></p>

@@ -1,0 +1,1 @@
+(C) Warn on using a floating point value as a loop counter (CERT: FLP30-C, FLP30-CPP).

@@ -1,0 +1,1 @@
+(C) Warn on uses of the mktemp function.

@@ -1,0 +1,1 @@
+(C) Check for arguments which are not null-terminated strings; applies to.

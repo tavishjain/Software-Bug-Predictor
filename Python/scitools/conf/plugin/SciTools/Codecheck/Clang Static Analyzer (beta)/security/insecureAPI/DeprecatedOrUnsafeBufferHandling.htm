@@ -1,0 +1,8 @@
+<p><b>1.1.6.13. security.insecureAPI.DeprecatedOrUnsafeBufferHandling (C)</b><br>
+Warn on occurrences of unsafe or deprecated buffer handling functions, which now have a secure variant: <code class="docutils literal notranslate"><span class="pre">sprintf,</span> <span class="pre">vsprintf,</span> <span class="pre">scanf,</span> <span class="pre">wscanf,</span> <span class="pre">fscanf,</span> <span class="pre">fwscanf,</span> <span class="pre">vscanf,</span> <span class="pre">vwscanf,</span> <span class="pre">vfscanf,</span> <span class="pre">vfwscanf,</span> <span class="pre">sscanf,</span> <span class="pre">swscanf,</span> <span class="pre">vsscanf,</span> <span class="pre">vswscanf,</span> <span class="pre">swprintf,</span> <span class="pre">snprintf,</span> <span class="pre">vswprintf,</span> <span class="pre">vsnprintf,</span> <span class="pre">memcpy,</span> <span class="pre">memmove,</span> <span class="pre">strncpy,</span> <span class="pre">strncat,</span> <span class="pre">memset</span></code></p>
+<p>Examples:
+<pre><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">test</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kt">char</span> <span class="n">buf</span> <span class="p">[</span><span class="mi">5</span><span class="p">];</span>
+  <span class="n">strncpy</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="s">"a"</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span> <span class="c1">// warn</span>
+<span class="p">}</span>
+</pre></div></pre></p>

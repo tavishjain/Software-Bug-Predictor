@@ -1,0 +1,1 @@
+(ObjC) Check for proper uses of Objective-C properties.

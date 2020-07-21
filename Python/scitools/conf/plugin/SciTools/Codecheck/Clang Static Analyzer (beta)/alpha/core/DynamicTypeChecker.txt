@@ -1,0 +1,1 @@
+(ObjC) Check for cases where the dynamic and the static type of an object are unrelated.

@@ -1,0 +1,51 @@
+#This script is designed to run with Understand - CodeCheck
+#Kacy Stocks - Oct 2, 2018
+use base ("Understand::Codecheck");
+use strict;
+use constant ERR1 => 'non-private member object';
+
+sub register_tr_text() {
+  my $check = shift;
+}
+
+sub checkID { return "EFFECTIVECPP_22";}
+
+sub name { return "22. Datamembers should be declared private";}
+
+sub description { return "22. Functions (not of the class, or friends) should not be able to directly change datamembers.";}
+
+sub detailed_description { return <<"END_DESC"
+<p><b>Rationale</b><br>
+Declaring datamembers privately (or protected) allows you to control accessibility of datamembers.</b><br>
+When the the client uses the code, they should only be able to use methods of the class to prevent confusion.</p>
+END_DESC
+}
+
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+sub test_entity { return 1;}
+
+sub test_global { return 0;}
+
+sub define_options{}
+
+# This subroutine will check your files for
+# objects that are defined outside of protected or private sections of the class body.
+sub check {
+  my $check = shift; 
+  my $file = shift;
+
+  return unless $file->kind->check("C Header File") || $file->kind->check("C Unknown Header File");
+  return unless ($file->contents =~ /class/);
+
+  my @refs = $file->filerefs("Define, Declare","Object");
+
+    foreach my $ref (@refs){
+        if ($ref->ent->kind->check("Object ~protected ~private")){
+            $check->violation($ref->ent->longname(),$file,$ref->line,$ref->column,ERR1);
+        }
+    }
+}

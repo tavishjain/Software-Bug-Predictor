@@ -1,0 +1,10 @@
+<p><b>1.1.8.7. osx.cocoa.ClassRelease (ObjC)</b><br>
+Check for sending 'retain', 'release', or 'autorelease' directly to a Class.</p>
+<p>Examples:
+<pre><div class="highlight"><pre><span></span><span class="k">@interface</span> <span class="bp">MyClass</span> : <span class="bp">NSObject</span>
+<span class="k">@end</span>
+
+<span class="kt">void</span> <span class="n">test</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="p">{</span>
+  <span class="p">[</span><span class="bp">MyClass</span> <span class="k">release</span><span class="p">];</span> <span class="c1">// warn</span>
+<span class="p">}</span>
+</pre></div></pre></p>

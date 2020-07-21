@@ -1,0 +1,7 @@
+<p><b>1.2.7.3. alpha.security.MallocOverflow (C)</b><br>
+Check for overflows in the arguments to malloc().</p>
+<p>Examples:
+<pre><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">test</span><span class="p">(</span><span class="kt">int</span> <span class="n">n</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kt">void</span> <span class="o">*</span><span class="n">p</span> <span class="o">=</span> <span class="n">malloc</span><span class="p">(</span><span class="n">n</span> <span class="o">*</span> <span class="k">sizeof</span><span class="p">(</span><span class="kt">int</span><span class="p">));</span> <span class="c1">// warn</span>
+<span class="p">}</span>
+</pre></div></pre></p>

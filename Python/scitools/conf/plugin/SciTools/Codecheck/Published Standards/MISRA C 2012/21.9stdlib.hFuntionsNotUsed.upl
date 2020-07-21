@@ -1,0 +1,93 @@
+#This script is designed to run with Understand - CodeCheck
+# Written by Blake Knudsen
+use base ("Understand::Codecheck");
+use strict;
+
+
+use constant ERR1 => 'stdlib.h function %2 used in file %1';
+
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+sub checkID { return "MISRA12_21.9";}
+
+
+sub name { return "21.9 The library functions bsearch and qsort of <stdlib.h> shall not be used";}
+
+sub description { return "21.9 (Required) The library functions bsearch and qsort of <stdlib.h> shall not be used";}
+
+sub detailed_description { return <<"END_DESC"
+<p><b>Amplification</b><br>
+The identifiers bsearch and qsort shall not be used and no macro with one of these names shall be
+expanded.
+</p>
+
+<p><b>Rationale</b><br>
+If the comparison function does not behave consistently when comparing elements, or it modifies any
+of the elements, the behaviour is undefined.
+</p>
+
+<p>
+Note: the unspecified behaviour, which relates to the treatment of elements that compare as equal,
+can be avoided by ensuring that the comparison function never returns 0. When two elements are
+otherwise equal, the comparison function could return a value that indicates their relative order in
+the initial array. 
+</p>
+
+<p>
+The implementation of <i>qsort</i> is likely to be recursive and will therefore place unknown demands on
+stack resource. This is of concern in embedded systems as the stack is likely to be a fixed, often small,
+size.
+</p>
+END_DESC
+}
+
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+sub test_entity { return 1;}
+
+sub test_global { return 0;}
+
+sub define_options {
+  my $check = shift;
+  $check->option->checkbox( 'oneViolation', 'Limit one violation per file?', 1 );
+}
+
+our %seen;
+sub check {
+  my $check = shift; 
+  my $file = shift;
+  return unless $file->kind->check("c file ~unknown ~unresolved");
+ 	foreach my $libFuncs($file->filerefs(" ","Function")){
+    next if $libFuncs->ent->ref( 'C DefineIn' );
+ 		if($libFuncs->ent->name eq "bsearch" || $libFuncs->ent->name eq "qsort"){
+ 			my $libUsed = includeCheck($file,$check);
+      if($libUsed){
+        $check->violation($libFuncs->ent,$file,$libFuncs->line,$libFuncs->column,ERR1,$file->name,$libFuncs->ent->name);
+      }
+    }
+ 	}
+  %seen=();
+}
+
+sub includeCheck {
+  my $file = shift;
+  my $check = shift;
+  
+  if ($seen{$file->id}){
+    return 0;
+  }
+  $seen{$file->id}=1 if $check->option->lookup( 'oneViolation' );
+  if($file->name eq "stdlib.h"){
+    return 1;
+  }
+  my @refs = $file->refs("include","file",1);
+  foreach my $ref (@refs){
+    return 1 if includeCheck($ref->ent, $check);
+  }
+}

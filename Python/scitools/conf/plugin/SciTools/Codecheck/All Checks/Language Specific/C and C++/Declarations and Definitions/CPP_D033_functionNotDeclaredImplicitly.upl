@@ -1,0 +1,133 @@
+# This script is designed to run with Understand - CodeCheck C/C++
+# Written by Kyle Jackson
+# 1-12-17
+
+
+# Boiler Plate code
+use base ( "Understand::Codecheck" );
+use strict;
+
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => "Function %1 declared implicitly";
+
+
+# This registers ERR1 with Understand
+sub register_tr_text {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+
+sub checkID { return "CPP_D033";}
+
+
+# This is the short error the Understand will use
+sub name{
+  return 'A function shall not be declared implicitly';
+}
+
+
+# This is the full description of the rule being tested
+sub description {
+  return "( Mandatory ) A function shall not be declared implicitly.";
+}
+
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description {
+  return  <<"END_DESC"
+
+<p><b>Rationale</b><br>
+Provided that a function call is made in the presence of a prototype, a constraint ensures that the
+number of arguments matches the number of parameters and that each argument can be assigned
+to its corresponding parameter.
+</p>
+
+<p>
+If a function is declared implicitly, a C90 compiler will assume that the function has a return type of int.
+Since an implicit function declaration does not provide a prototype, a compiler will have no information
+about the number of function parameters and their types. Inappropriate type conversions may result
+in passing the arguments and assigning the return value, as well as other undefined behaviour.
+</p>
+
+<b>Example</b>
+
+<p>
+If the function power is declared as:
+</p>
+
+<pre style="margin-top:0;padding-top:0;">
+
+  extern double power ( double d, int n );
+
+</pre>
+
+<p>
+but the declaration is not visible in the following code then undefined behaviour will occur.
+</p>
+
+<pre style="margin-top:0;padding-top:0;">
+
+  void func ( void )
+  {
+    /* Non-compliant - return type and both argument type s incorrect */
+    double sq1 = power ( 1, 2.0 );
+  }
+
+</pre>
+
+END_DESC
+}
+
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language eq "C++";
+}
+
+
+# This determines if this script is per file
+sub test_entity {
+  return 1;
+}
+
+
+# This determines if this script is per project or per file
+sub test_global {
+  return 0;
+}
+
+
+# Any defined options go here
+sub define_options{}
+
+
+# This is the actual test being performed on the user's code
+sub check {
+
+  # Pull the name of the check and the name of the file from the incoming script request
+  my $check = shift;
+  my $file = shift;
+  return unless $file->kind->check( 'C File' );
+
+  # Pull all typedefs, return if non exists
+  my @allDeclares = $file->filerefs( 'C Declare', 'C Function', 1 );
+  return unless @allDeclares;
+  
+  # Check that each type is use
+  DEC : foreach my $declare ( @allDeclares ) {
+
+    my @allCallBys = $declare->ent->refs( 'C CallBy' );
+    next DEC unless @allCallBys;
+
+    CLB : foreach my $callBy ( @allCallBys ) {
+
+      if ( $callBy->file->uniquename eq $declare->file->uniquename and $callBy->line == $declare->line and $callBy->column == $declare->column ) {
+        $check->violation( $declare->ent, $file, $declare->line, $declare->column, ERR1, $declare->ent->name );
+      }
+
+    }
+  }
+}

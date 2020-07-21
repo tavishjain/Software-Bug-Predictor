@@ -1,0 +1,70 @@
+<p><b>1.1.1.1. core.CallAndMessage (C, C++, ObjC)</b><br>
+Check for logical errors for function calls and Objective-C message expressions (e.g., uninitialized arguments, null function pointers).</p>
+<p>Examples:
+<pre><div class="highlight"><pre><span></span><span class="c1">//C</span>
+<span class="kt">void</span> <span class="nf">test</span><span class="p">()</span> <span class="p">{</span>
+   <span class="kt">void</span> <span class="p">(</span><span class="o">*</span><span class="n">foo</span><span class="p">)(</span><span class="kt">void</span><span class="p">);</span>
+   <span class="n">foo</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+   <span class="n">foo</span><span class="p">();</span> <span class="c1">// warn: function pointer is null</span>
+ <span class="p">}</span>
+
+ <span class="c1">// C++</span>
+ <span class="k">class</span> <span class="n">C</span> <span class="p">{</span>
+ <span class="nl">public</span><span class="p">:</span>
+   <span class="kt">void</span> <span class="n">f</span><span class="p">();</span>
+ <span class="p">};</span>
+
+ <span class="kt">void</span> <span class="nf">test</span><span class="p">()</span> <span class="p">{</span>
+   <span class="n">C</span> <span class="o">*</span><span class="n">pc</span><span class="p">;</span>
+   <span class="n">pc</span><span class="o">-&gt;</span><span class="n">f</span><span class="p">();</span> <span class="c1">// warn: object pointer is uninitialized</span>
+ <span class="p">}</span>
+
+ <span class="c1">// C++</span>
+ <span class="k">class</span> <span class="n">C</span> <span class="p">{</span>
+ <span class="nl">public</span><span class="p">:</span>
+   <span class="kt">void</span> <span class="n">f</span><span class="p">();</span>
+ <span class="p">};</span>
+
+ <span class="kt">void</span> <span class="nf">test</span><span class="p">()</span> <span class="p">{</span>
+   <span class="n">C</span> <span class="o">*</span><span class="n">pc</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+   <span class="n">pc</span><span class="o">-&gt;</span><span class="n">f</span><span class="p">();</span> <span class="c1">// warn: object pointer is null</span>
+ <span class="p">}</span>
+
+ <span class="c1">// Objective-C</span>
+ <span class="k">@interface</span> <span class="bp">MyClass</span> : <span class="bp">NSObject</span>
+ <span class="k">@property</span> <span class="p">(</span><span class="k">readwrite</span><span class="p">,</span><span class="k">assign</span><span class="p">)</span> <span class="kt">id</span> <span class="n">x</span><span class="p">;</span>
+ <span class="o">-</span> <span class="p">(</span><span class="kt">long</span> <span class="kt">double</span><span class="p">)</span><span class="n">longDoubleM</span><span class="p">;</span>
+ <span class="k">@end</span>
+
+ <span class="kt">void</span> <span class="n">test</span><span class="p">()</span> <span class="p">{</span>
+   <span class="bp">MyClass</span> <span class="o">*</span><span class="n">obj1</span><span class="p">;</span>
+   <span class="kt">long</span> <span class="kt">double</span> <span class="n">ld1</span> <span class="o">=</span> <span class="p">[</span><span class="n">obj1</span> <span class="n">longDoubleM</span><span class="p">];</span>
+     <span class="c1">// warn: receiver is uninitialized</span>
+ <span class="p">}</span>
+
+ <span class="c1">// Objective-C</span>
+ <span class="k">@interface</span> <span class="bp">MyClass</span> : <span class="bp">NSObject</span>
+ <span class="k">@property</span> <span class="p">(</span><span class="k">readwrite</span><span class="p">,</span><span class="k">assign</span><span class="p">)</span> <span class="kt">id</span> <span class="n">x</span><span class="p">;</span>
+ <span class="o">-</span> <span class="p">(</span><span class="kt">long</span> <span class="kt">double</span><span class="p">)</span><span class="n">longDoubleM</span><span class="p">;</span>
+ <span class="k">@end</span>
+
+ <span class="kt">void</span> <span class="n">test</span><span class="p">()</span> <span class="p">{</span>
+   <span class="bp">MyClass</span> <span class="o">*</span><span class="n">obj1</span><span class="p">;</span>
+   <span class="kt">id</span> <span class="n">i</span> <span class="o">=</span> <span class="n">obj1</span><span class="p">.</span><span class="n">x</span><span class="p">;</span> <span class="c1">// warn: uninitialized object pointer</span>
+ <span class="p">}</span>
+
+ <span class="c1">// Objective-C</span>
+ <span class="k">@interface</span> <span class="nc">Subscriptable</span> : <span class="bp">NSObject</span>
+ <span class="o">-</span> <span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nl">objectAtIndexedSubscript</span><span class="p">:(</span><span class="kt">unsigned</span> <span class="kt">int</span><span class="p">)</span><span class="n">index</span><span class="p">;</span>
+ <span class="k">@end</span>
+
+ <span class="k">@interface</span> <span class="bp">MyClass</span> : <span class="nc">Subscriptable</span>
+ <span class="k">@property</span> <span class="p">(</span><span class="k">readwrite</span><span class="p">,</span><span class="k">assign</span><span class="p">)</span> <span class="kt">id</span> <span class="n">x</span><span class="p">;</span>
+ <span class="o">-</span> <span class="p">(</span><span class="kt">long</span> <span class="kt">double</span><span class="p">)</span><span class="n">longDoubleM</span><span class="p">;</span>
+ <span class="k">@end</span>
+
+ <span class="kt">void</span> <span class="n">test</span><span class="p">()</span> <span class="p">{</span>
+   <span class="bp">MyClass</span> <span class="o">*</span><span class="n">obj1</span><span class="p">;</span>
+   <span class="kt">id</span> <span class="n">i</span> <span class="o">=</span> <span class="n">obj1</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span> <span class="c1">// warn: uninitialized object pointer</span>
+ <span class="p">}</span>
+</pre></div></pre></p>

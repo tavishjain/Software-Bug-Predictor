@@ -1,0 +1,6 @@
+<p><b>Clang Static Analyzer Checks</b><br>
+The Clang Static Analyzer provides an infrastructure for symbolic execution of your C, C++, or Objective-C code, allowing the checkers you select to build and follow paths of potential input and return values that could lead to a wide variety of bugs, such as division by zero, null dereferences, or memory leaks; or improper usage of various OSX/iOS, Unix, or POSIX APIs, which may not be found by traditional manual or automated testing suites.</p>
+
+<p>Although clever algorithms are employed to reduce the amount of work the checkers take to find bugs, and constraint solvers are applied after the fact to reduce the number of false positives generated, this kind of analysis may take longer than compiling, and false positives are still possible. For instance, to enhance performance in both arenas, the analyzer will not simulate paths deemed invalid by assert statements.</p>
+
+<p>For more information see <a href='http://clang-analyzer.llvm.org'>http://clang-analyzer.llvm.org</a>.</p>

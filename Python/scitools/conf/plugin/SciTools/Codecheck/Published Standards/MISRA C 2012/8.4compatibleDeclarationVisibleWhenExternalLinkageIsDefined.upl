@@ -1,0 +1,215 @@
+# This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson
+# 11-11-14
+
+
+# Boiler Plate code
+use base ( 'Understand::Codecheck' );
+use strict;
+
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => 'Object or function %1, has external linkage but no visible declaration';
+
+
+# This registers ERR1 with Understand
+sub register_tr_text {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+sub checkID { return "MISRA12_8.4";}
+
+
+
+# This is the short error the Understand will use
+sub name{
+  return '8.4 A compatible declaration shall be visible when an object or function with external linkage is defined';
+}
+
+
+# This is the full description of the rule being tested
+sub description {
+  return '8.4 ( Required ) A compatible declaration shall be visible when an object or function with external linkage is defined.';
+}
+
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description {
+  return  <<"END_DESC"
+
+<p><b>Amplification</b><br>
+A compatible declaration is one which declares a compatible type for the object or function being
+defined.
+</p>
+
+<p><b>Rationale</b><br>
+If a declaration for an object or function is visible when that object or function is defined, a compiler
+must check that the declaration and definition are compatible. In the presence of function prototypes,
+as required by Rule 8.2, checking extends to the number and type of function parameters.
+</p>
+
+<p>
+The recommended method of implementing declarations of objects and functions with external
+linkage is to declare them in a header file, and then include the header file in all those code files that
+need them, including the one that defines them (See Rule 8.5).
+</p>
+
+<p><b>Example</b><br>
+In these examples there are no declarations or definitions of objects or functions other than those
+present in the code.
+</p>
+
+<pre style="margin-top:0;padding-top:0;">
+
+extern  int16_t count;
+        int16_t count = 0;        /* Compliant                        */
+
+extern uint16_t speed = 6000u;    /* Non-compliant - no declaration
+                                   * prior to this definition         */
+
+uint8_t pressure = 101u;          /* Non-compliant - no declaration
+                                   * prior to this definition         */
+extern void func1 ( void );
+extern void func2 ( int16_t x, int16_t y );
+extern void func3 ( int16_t x, int16_t y );
+
+void func1 ( void )
+{
+                                  /* Compliant                        */
+}
+
+</pre>
+
+<p>
+The following non-compliant definition of func3 also violates Rule 8.3.
+</p>
+
+<pre style="margin-top:0;padding-top:0;">
+
+void func2 ( int16_t x, int16_t y )
+{
+                                        /* Compliant */
+}
+
+void func3 ( int16_t x, uint16_t y )
+{
+                                        /* Non-compliant - parameter types different */
+}
+
+void func4 ( void )
+{
+                                        /* Non-compliant - no declaration of func4 before this definition */
+}
+
+static void func5 ( void )
+{
+                                        /* Compliant - rule does not apply to objects/functions with internal
+                                         * linkage */
+}
+
+</pre>
+
+<p><b>See also</b><br>
+Rule 8.2, Rule 8.3, Rule 8.5, Rule 17.3
+</p>
+
+<p><b>Developer's Note</b><br>
+The declaration must be visible to the definition and not simply available before use.
+</p>
+
+END_DESC
+}
+
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language eq "C++";
+}
+
+
+# This determines if this script is per file
+sub test_entity {
+  return 1;
+}
+
+
+# This determines if this script is per project or per file
+sub test_global {
+  return 0;
+}
+
+
+# Any defined options go here
+sub define_options {
+}
+
+
+# This is the actual test being performed on the user's code
+sub check {
+
+  # Pull the check and file from calling function, return unless file
+  my $check = shift;
+  my $file = shift;
+  return unless $file->kind->check ( 'file' );
+
+  my @objectsDefined = $file->filerefs ( 'Define', 'Object Global ~Static, Function ~Static ~Member ~Template', 1 );
+  return unless @objectsDefined;
+
+  # Loop through each object
+  foreach my $object ( @objectsDefined ) {
+
+    # Skip built in functions and functions and objects within namespaces
+    next if $object->ent->name =~ /^__/;
+    next if $object->ent->type =~ /\bconst\b/;
+
+    # Skip if this entity does not exist in the global scope or is main
+    my $parent = $object->ent->parent;
+    next unless $parent;
+    
+    next unless $parent->kind->check( 'C File' );
+    next if $object->ent->name eq 'main';
+
+    # Create a hash reference to store all files for this translation unit and loop through all of them
+    my $filesToCheck = {};
+    $filesToCheck = buildTranslationUnit( $object->file, $filesToCheck );
+
+    # Pull all declare references for this object and the name of file where it is defined
+    my @objectDeclares = $object->ent->refs ( 'Declarein' );
+    my $currentFile = $object->file->name;
+    my $ok = 0;
+
+    # Loop through all the declares and check to see if they occur in a header file or within the same file as the definition
+    foreach my $declare ( @objectDeclares ) {
+
+      $ok = 1 if exists $$filesToCheck{ $declare->file->name };
+
+    }
+
+    # A declaration, if any, can't be visible
+    $check->violation( $object->ent, $object->file, $object->line, $object->column, ERR1, $object->ent->name ) unless $ok;
+
+  }
+}
+
+
+# This recursive function builds my translation unit
+sub buildTranslationUnit {
+
+  # Pull information from upper level and add this file to the hash to signify it has been checked
+  my $file = shift;
+  my $filesToCheck = shift;
+  $filesToCheck->{ $file->name } = $file;
+
+  # Pull all files that this file include and recursivly check
+  my @includedFiles = $file->filerefs( 'Include' );
+  INC : foreach my $include ( @includedFiles ) {
+
+    # Skip this file if it has already been checked
+    next INC if exists $$filesToCheck{ $include->ent->name };
+    $filesToCheck = buildTranslationUnit( $include->ent, $filesToCheck );
+
+  }
+  return $filesToCheck;
+}

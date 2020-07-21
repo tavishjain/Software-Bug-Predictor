@@ -1,0 +1,193 @@
+# This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson
+# Rewritten 6/16/16
+
+
+# Boiler Plate code
+use base ("Understand::Codecheck");
+use strict;
+
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => 'Catch handlers for classes not ordered from most-derived to base. %1 will catch exceptions meant for a derived class.';
+
+
+# This registers ERR1 with Understand
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+sub checkID { return "MISRA08_15-3-6";}
+
+
+
+# This is the short error the Understand will use
+sub name { return "15-3-6 Where multiple handlers are provided in a single try-catch statement or function-try-block for a derived class and some or all of its bases, the handlers shall be ordered most-derived to base class";}
+
+
+# This is the full description of the rule being tested
+sub description { return "15-3-6 (Required)(Slow) Where multiple handlers are provided in a single try-catch statement or function-try-block for a derived class and some or all of its bases, the handlers shall be ordered most-derived to base class.";}
+
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description { return <<"END_DESC"
+<p><b>Rationale</b><br>
+When testing to see if the type of an exception matches the type of a handler, a derived class
+exception will match with a handler for its base class. If the base class handler is found before
+the handler for the derived class, the base class handler will be used. The derived class handler is
+<I>unreachable code</I> and can never be executed.</p>
+<br>
+<br>
+<b>Example</b><pre style="margin-top:0;padding-top:0;">
+  // classes used for exception handling
+  class B { };
+  class D: public B { };
+  int y() {
+    try
+    {
+      // ...
+    }
+    catch ( D &d ) // Compliant – Derived class caught before base class
+    {
+      // ...
+    }
+    catch ( B &b ) // Compliant – Base class caught after derived class
+    {
+      // ...
+    }
+  }
+
+  int z() {
+    // Using the classes from above ...
+    try
+    {
+      // ...
+    }
+    catch ( B &b ) // Non-compliant – will catch derived classes as well
+    {
+      // ...
+    }
+    catch ( D &d ) // Non-compliant – Derived class will be caught above
+    {
+                   // Any code here will be unreachable,
+                   // breaking Rule 0–1–1
+    }
+  }
+</pre>
+END_DESC
+}
+
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+
+# This determines if this script is per file
+sub test_entity { return 1;}
+
+
+# This determines if this script is per project or per file
+sub test_global { return 0;}
+
+
+# Any defined options go here
+sub define_options{}
+
+
+# This function consumes a catch statement
+sub consumeCatch {
+
+  # Pull incomming variables
+  my $lexeme = shift;
+  my $catch = shift;
+  my $check = shift;
+
+  # Reach block 
+  # Note future self. I don't check for ; because it appears catch statements must be followed by compound statements
+  while( $lexeme->text ne '{' ) {
+
+    if ( $lexeme->ent and $lexeme->ent->kind->check( 'C Class' ) ) {
+      derivedClass( $catch, $lexeme->ent, $check );  
+    }
+
+    $lexeme = $lexeme->nextUseful;
+
+  }
+
+  my $counter = 1;
+  $lexeme = $lexeme->nextUseful;
+
+  while ( $counter > 0 ) {
+
+    $counter++ if $lexeme->text eq "{";
+    $counter-- if $lexeme->text eq "}";
+    $lexeme = $lexeme->nextUseful;
+
+  }
+
+  # Move lexeme out of the block and return
+  return $lexeme;
+
+}
+
+
+# This function compares two entities to determine the first entity is an ancestor to the second
+sub derivedClass {
+
+  my $originalRef = shift;
+  my $toCompareEnt = shift;
+  my $check = shift;
+
+  if ( $toCompareEnt->id eq $originalRef->ent->id ) {
+
+    $check->violation( $originalRef->ent, $originalRef->file, $originalRef->line, $originalRef->column, ERR1, $originalRef->ent->name );
+    return;
+
+  }
+
+  my @ancestors = $toCompareEnt->refs( 'C Base' );
+  foreach my $parent( @ancestors ) {
+    derivedClass( $originalRef, $parent->ent, $check );
+  }
+
+}
+
+
+# This is the actual test being performed on the user's code
+sub check {
+
+  # Pull the name of the check and the name of the file from the incoming script request
+  my $check = shift; 
+  my $file = shift;
+  return unless $file->kind->check( 'C File' );
+  
+  # Create a list of all functions that are defined and have a catch handler
+  my @functionsDefined = $file->filerefs( 'C Define', 'C function', 1 );
+  return unless @functionsDefined;
+  
+  # Loop through each function with catch handlers
+  foreach my $function( @functionsDefined ) {
+
+    my @catchExceptions = $function->ent->refs( 'C Catch Exception' );
+    next unless scalar( @catchExceptions ) > 1;
+
+    # Test each exception to ensure it does not preceed a derived class
+    CAT : foreach my $catch( @catchExceptions ) {
+
+      # Check kind and create lexeme
+      next CAT unless $catch->ent->kind->check( 'C Class' );
+      my $lexeme = $catch->lexeme;
+      next CAT unless $lexeme;
+      $lexeme = $lexeme->nextUseful;
+
+      $lexeme = consumeCatch( $lexeme, $catch, $check );
+      while ( $lexeme and $lexeme->text eq 'catch' ) {
+        $lexeme = consumeCatch( $lexeme, $catch, $check );
+      }
+    }
+  }
+}

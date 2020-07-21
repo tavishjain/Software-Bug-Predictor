@@ -1,0 +1,64 @@
+#This script is designed to run with Understand - CodeCheck
+use base ("Understand::Codecheck");
+use strict;
+
+
+sub register_tr_text() {
+  my $check = shift;
+}
+
+sub checkID { return "MISRA12_21.4";}
+
+
+sub name { return "21.4 The standard header file <setjmp.h> shall not be used";}
+
+sub description { return "21.4 (Required) The standard header file <setjmp.h> shall not be used";}
+
+sub detailed_description { return <<"END_DESC"
+<p><b>Amplification</b><br>
+None of the facilities that are specified as being provided by <setjmp.h> shall be used.
+</p>
+
+<p><b>Rationale</b><br>
+setjmp and longjmp allow the normal function call mechanisms to be bypassed. Their use may lead to
+undefined and unspecified behaviour.
+</p>
+
+END_DESC
+}
+
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+sub test_entity { return 1;}
+
+sub test_global { return 0;}
+
+sub define_options {
+  my $check = shift;
+  $check->option->checkbox( 'oneViolation', 'Limit one violation per file?', 1 );
+}
+
+our %seen;
+sub check {
+  my $check = shift; 
+  my $file = shift;
+  return unless $file->kind->check("c file ~unknown ~unresolved");
+
+  my @refs = $file->refs("include","file",1);
+
+  foreach my $ref (@refs){
+
+    next if ($seen{$file->id});
+
+    if($ref->ent->name eq "setjmp.h"){
+      $seen{$file->id}=1 if $check->option->lookup( 'oneViolation' );
+      $check->violation($file,$file,$ref->line,$ref->column,"standard header file setjmp.h used.");
+    }
+  }
+  %seen=();
+}
+
+

@@ -1,0 +1,27 @@
+{
+  "name": "error_predictor",
+  "version": "1.0.0",
+  "description": "a client interface for the error prediction app",
+  "main": "main.js",
+  "scripts": {
+    "startw": "nodemon --watch * --exec electron .",
+    "start": "electron ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "front_end"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.19.2",
+    "cheerio": "^1.0.0-rc.3",
+    "electron": "^7.1.6",
+    "electron-debug": "^3.0.1",
+    "filesize": "^6.1.0",
+    "jquery": "^3.4.1",
+    "moment": "^2.27.0",
+    "python-shell": "^2.0.1",
+    "request": "^2.88.0"
+  }
+}

@@ -1,0 +1,35 @@
+<p><b>1.2.8.5. alpha.unix.Stream (C)</b><br>
+Check stream handling functions: <code class="docutils literal notranslate"><span class="pre">fopen,</span> <span class="pre">tmpfile,</span> <span class="pre">fclose,</span> <span class="pre">fread,</span> <span class="pre">fwrite,</span> <span class="pre">fseek,</span> <span class="pre">ftell,</span> <span class="pre">rewind,</span> <span class="pre">fgetpos,</span></code><code class="docutils literal notranslate"><span class="pre">fsetpos,</span> <span class="pre">clearerr,</span> <span class="pre">feof,</span> <span class="pre">ferror,</span> <span class="pre">fileno</span></code>.</p>
+<p>Examples:
+<pre><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">test</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kt">FILE</span> <span class="o">*</span><span class="n">p</span> <span class="o">=</span> <span class="n">fopen</span><span class="p">(</span><span class="s">"foo"</span><span class="p">,</span> <span class="s">"r"</span><span class="p">);</span>
+<span class="p">}</span> <span class="c1">// warn: opened file is never closed</span>
+
+<span class="kt">void</span> <span class="nf">test</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kt">FILE</span> <span class="o">*</span><span class="n">p</span> <span class="o">=</span> <span class="n">fopen</span><span class="p">(</span><span class="s">"foo"</span><span class="p">,</span> <span class="s">"r"</span><span class="p">);</span>
+  <span class="n">fseek</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">SEEK_SET</span><span class="p">);</span> <span class="c1">// warn: stream pointer might be NULL</span>
+  <span class="n">fclose</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="nf">test</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kt">FILE</span> <span class="o">*</span><span class="n">p</span> <span class="o">=</span> <span class="n">fopen</span><span class="p">(</span><span class="s">"foo"</span><span class="p">,</span> <span class="s">"r"</span><span class="p">);</span>
+
+  <span class="k">if</span> <span class="p">(</span><span class="n">p</span><span class="p">)</span>
+    <span class="n">fseek</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">);</span>
+     <span class="c1">// warn: third arg should be SEEK_SET, SEEK_END, or SEEK_CUR</span>
+
+  <span class="n">fclose</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="nf">test</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kt">FILE</span> <span class="o">*</span><span class="n">p</span> <span class="o">=</span> <span class="n">fopen</span><span class="p">(</span><span class="s">"foo"</span><span class="p">,</span> <span class="s">"r"</span><span class="p">);</span>
+  <span class="n">fclose</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
+  <span class="n">fclose</span><span class="p">(</span><span class="n">p</span><span class="p">);</span> <span class="c1">// warn: already closed</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="nf">test</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kt">FILE</span> <span class="o">*</span><span class="n">p</span> <span class="o">=</span> <span class="n">tmpfile</span><span class="p">();</span>
+  <span class="n">ftell</span><span class="p">(</span><span class="n">p</span><span class="p">);</span> <span class="c1">// warn: stream pointer might be NULL</span>
+  <span class="n">fclose</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div></pre></p>

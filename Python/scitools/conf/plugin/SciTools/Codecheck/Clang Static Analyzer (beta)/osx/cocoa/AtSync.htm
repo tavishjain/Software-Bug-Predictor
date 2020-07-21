@@ -1,0 +1,13 @@
+<p><b>1.1.8.5. osx.cocoa.AtSync (ObjC)</b><br>
+Check for nil pointers used as mutexes for @synchronized.</p>
+<p>Examples:
+<pre><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">test</span><span class="p">(</span><span class="kt">id</span> <span class="n">x</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">x</span><span class="p">)</span>
+    <span class="k">@synchronized</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="p">{}</span> <span class="c1">// warn: nil value used as mutex</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="nf">test</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kt">id</span> <span class="n">y</span><span class="p">;</span>
+  <span class="k">@synchronized</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="p">{}</span> <span class="c1">// warn: uninitialized value used as mutex</span>
+<span class="p">}</span>
+</pre></div></pre></p>

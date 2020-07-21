@@ -1,0 +1,123 @@
+# This script is designed to run with Understand - CodeCheck C/C++
+# Written by Kyle Jackson
+# 1-20-17
+
+
+# Boiler Plate code
+use base ( "Understand::Codecheck" );
+use strict;
+
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => "Parameter %1 is modified";
+
+
+# This registers ERR1 with Understand
+sub register_tr_text {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+
+sub checkID { return "CPP_F023";}
+
+
+# This is the short error the Understand will use
+sub name{
+  return 'A function parameter should not be modified';
+}
+
+
+# This is the full description of the rule being tested
+sub description {
+  return "( Advisory ) A function parameter should not be modified.";
+}
+
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description {
+  return  <<"END_DESC"
+
+<p><b>Rationale</b><br>
+A function parameter behaves in the same manner as an object that has automatic storage duration.
+While the C language permits parameters to be modified, such use can be confusing and conflict with
+programmer expectations. It may be less confusing to copy the parameter to an automatic object
+and modify that copy. With a modern compiler, this will not usually result in any storage or execution
+time penalty. 
+</p>
+
+<p>
+Programmers who are unfamiliar with C, but who are used to other languages, may modify a parameter
+believing that the effects of the modification will be felt in the calling function.
+</p>
+
+<p>
+<b>Example</b>
+</p>
+
+<pre style="margin-top:0;padding-top:0;">
+
+  int16_t glob = 0;
+  void proc ( int16_t para )
+  {
+    para = glob; /* Non-compliant */
+  }
+  void f ( char *p, char *q )
+  {
+    p = q; /* Non-compliant */
+    *p = *q; /* Compliant */
+  }
+
+</pre>
+
+END_DESC
+}
+
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language eq "C++";
+}
+
+
+# This determines if this script is per file
+sub test_entity {
+  return 1;
+}
+
+
+# This determines if this script is per project or per file
+sub test_global {
+  return 0;
+}
+
+
+# Any defined options go here
+sub define_options{}
+
+
+# This is the actual test being performed on the user's code
+sub check {
+
+  # Pull the name of the check and the name of the file from the incoming script request
+  my $check = shift;
+  my $file = shift;
+  return unless $file->kind->check( 'C File' );
+
+  # Pull all typedefs, return if non exists
+  my @allParameters = $file->filerefs( 'C Define', 'C Parameter', 1 );
+  return unless @allParameters;
+  
+  # Check that each type is use
+  foreach my $parameter ( @allParameters ) {
+
+    # Skip parameters passed by reference
+    next if $parameter->ent->type =~ /\&/;
+
+    my @modified = $parameter->ent->refs( 'C Setby ~Deref, C Modifyby ~Deref' );
+    foreach my $violation ( @modified ) {
+      $check->violation( $violation->ent, $file, $violation->line, $violation->column, ERR1, $violation->scope->name );  
+    }
+  }
+}

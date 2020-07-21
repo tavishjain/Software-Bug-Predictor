@@ -1,0 +1,10 @@
+<p><b>1.1.8.2. osx.NumberObjectConversion (C, C++, ObjC)</b><br>
+Check for erroneous conversions of objects representing numbers into numbers.</p>
+<p>Examples:
+<pre><div class="highlight"><pre><span></span><span class="bp">NSNumber</span> <span class="o">*</span><span class="n">photoCount</span> <span class="o">=</span> <span class="p">[</span><span class="n">albumDescriptor</span> <span class="nl">objectForKey</span><span class="p">:</span><span class="s">@"PhotoCount"</span><span class="p">];</span>
+<span class="c1">// Warning: Comparing a pointer value of type 'NSNumber *'</span>
+<span class="c1">// to a scalar integer value</span>
+<span class="k">if</span> <span class="p">(</span><span class="n">photoCount</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+  <span class="p">[</span><span class="nb">self</span> <span class="n">displayPhotos</span><span class="p">];</span>
+<span class="p">}</span>
+</pre></div></pre></p>
