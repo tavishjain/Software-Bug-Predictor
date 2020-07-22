@@ -1,0 +1,1 @@
+Gathers information for annotation driven invalidation checking for classes that contains a method annotated with 'objc_instance_variable_invalidator'

@@ -1,0 +1,74 @@
+<p><b>1.2.3.7. alpha.cplusplus.UninitializedObject (C++)</b><br>
+This checker reports uninitialized fields in objects created after a constructor call. It doesn't only find direct uninitialized fields, but rather makes a deep inspection of the object, analyzing all of it's fields subfields. The checker regards inherited fields as direct fields, so one will recieve warnings for uninitialized inherited data members as well.</p>
+<p>Examples:
+<pre><div class="highlight"><pre><span></span><span class="c1">// With Pedantic and CheckPointeeInitialization set to true</span>
+
+<span class="k">struct</span> <span class="n">A</span> <span class="p">{</span>
+  <span class="k">struct</span> <span class="n">B</span> <span class="p">{</span>
+    <span class="kt">int</span> <span class="n">x</span><span class="p">;</span> <span class="c1">// note: uninitialized field 'this-&gt;b.x'</span>
+    <span class="c1">// note: uninitialized field 'this-&gt;bptr-&gt;x'</span>
+    <span class="kt">int</span> <span class="n">y</span><span class="p">;</span> <span class="c1">// note: uninitialized field 'this-&gt;b.y'</span>
+    <span class="c1">// note: uninitialized field 'this-&gt;bptr-&gt;y'</span>
+  <span class="p">};</span>
+  <span class="kt">int</span> <span class="o">*</span><span class="n">iptr</span><span class="p">;</span> <span class="c1">// note: uninitialized pointer 'this-&gt;iptr'</span>
+  <span class="n">B</span> <span class="n">b</span><span class="p">;</span>
+  <span class="n">B</span> <span class="o">*</span><span class="n">bptr</span><span class="p">;</span>
+  <span class="kt">char</span> <span class="o">*</span><span class="n">cptr</span><span class="p">;</span> <span class="c1">// note: uninitialized pointee 'this-&gt;cptr'</span>
+
+  <span class="n">A</span> <span class="p">(</span><span class="n">B</span> <span class="o">*</span><span class="n">bptr</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span><span class="n">cptr</span><span class="p">)</span> <span class="o">:</span> <span class="n">bptr</span><span class="p">(</span><span class="n">bptr</span><span class="p">),</span> <span class="n">cptr</span><span class="p">(</span><span class="n">cptr</span><span class="p">)</span> <span class="p">{}</span>
+<span class="p">};</span>
+
+<span class="kt">void</span> <span class="nf">f</span><span class="p">()</span> <span class="p">{</span>
+  <span class="n">A</span><span class="o">::</span><span class="n">B</span> <span class="n">b</span><span class="p">;</span>
+  <span class="kt">char</span> <span class="n">c</span><span class="p">;</span>
+  <span class="n">A</span> <span class="n">a</span><span class="p">(</span><span class="o">&amp;</span><span class="n">b</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">c</span><span class="p">);</span> <span class="c1">// warning: 6 uninitialized fields</span>
+ <span class="c1">//          after the constructor call</span>
+<span class="p">}</span>
+
+<span class="c1">// With Pedantic set to false and</span>
+<span class="c1">// CheckPointeeInitialization set to true</span>
+<span class="c1">// (every field is uninitialized)</span>
+
+<span class="k">struct</span> <span class="n">A</span> <span class="p">{</span>
+  <span class="k">struct</span> <span class="n">B</span> <span class="p">{</span>
+    <span class="kt">int</span> <span class="n">x</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="n">y</span><span class="p">;</span>
+  <span class="p">};</span>
+  <span class="kt">int</span> <span class="o">*</span><span class="n">iptr</span><span class="p">;</span>
+  <span class="n">B</span> <span class="n">b</span><span class="p">;</span>
+  <span class="n">B</span> <span class="o">*</span><span class="n">bptr</span><span class="p">;</span>
+  <span class="kt">char</span> <span class="o">*</span><span class="n">cptr</span><span class="p">;</span>
+
+  <span class="n">A</span> <span class="p">(</span><span class="n">B</span> <span class="o">*</span><span class="n">bptr</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span><span class="n">cptr</span><span class="p">)</span> <span class="o">:</span> <span class="n">bptr</span><span class="p">(</span><span class="n">bptr</span><span class="p">),</span> <span class="n">cptr</span><span class="p">(</span><span class="n">cptr</span><span class="p">)</span> <span class="p">{}</span>
+<span class="p">};</span>
+
+<span class="kt">void</span> <span class="nf">f</span><span class="p">()</span> <span class="p">{</span>
+  <span class="n">A</span><span class="o">::</span><span class="n">B</span> <span class="n">b</span><span class="p">;</span>
+  <span class="kt">char</span> <span class="n">c</span><span class="p">;</span>
+  <span class="n">A</span> <span class="n">a</span><span class="p">(</span><span class="o">&amp;</span><span class="n">b</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">c</span><span class="p">);</span> <span class="c1">// no warning</span>
+<span class="p">}</span>
+
+<span class="c1">// With Pedantic set to true and</span>
+<span class="c1">// CheckPointeeInitialization set to false</span>
+<span class="c1">// (pointees are regarded as initialized)</span>
+
+<span class="k">struct</span> <span class="n">A</span> <span class="p">{</span>
+  <span class="k">struct</span> <span class="n">B</span> <span class="p">{</span>
+    <span class="kt">int</span> <span class="n">x</span><span class="p">;</span> <span class="c1">// note: uninitialized field 'this-&gt;b.x'</span>
+    <span class="kt">int</span> <span class="n">y</span><span class="p">;</span> <span class="c1">// note: uninitialized field 'this-&gt;b.y'</span>
+  <span class="p">};</span>
+  <span class="kt">int</span> <span class="o">*</span><span class="n">iptr</span><span class="p">;</span> <span class="c1">// note: uninitialized pointer 'this-&gt;iptr'</span>
+  <span class="n">B</span> <span class="n">b</span><span class="p">;</span>
+  <span class="n">B</span> <span class="o">*</span><span class="n">bptr</span><span class="p">;</span>
+  <span class="kt">char</span> <span class="o">*</span><span class="n">cptr</span><span class="p">;</span>
+
+  <span class="n">A</span> <span class="p">(</span><span class="n">B</span> <span class="o">*</span><span class="n">bptr</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span><span class="n">cptr</span><span class="p">)</span> <span class="o">:</span> <span class="n">bptr</span><span class="p">(</span><span class="n">bptr</span><span class="p">),</span> <span class="n">cptr</span><span class="p">(</span><span class="n">cptr</span><span class="p">)</span> <span class="p">{}</span>
+<span class="p">};</span>
+
+<span class="kt">void</span> <span class="nf">f</span><span class="p">()</span> <span class="p">{</span>
+  <span class="n">A</span><span class="o">::</span><span class="n">B</span> <span class="n">b</span><span class="p">;</span>
+  <span class="kt">char</span> <span class="n">c</span><span class="p">;</span>
+  <span class="n">A</span> <span class="n">a</span><span class="p">(</span><span class="o">&amp;</span><span class="n">b</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">c</span><span class="p">);</span> <span class="c1">// warning: 3 uninitialized fields</span>
+ <span class="c1">//          after the constructor call</span>
+<span class="p">}</span>
+</pre></div></pre></p>

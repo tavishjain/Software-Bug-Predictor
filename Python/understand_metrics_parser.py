@@ -68,7 +68,8 @@ os.system("find . -type f ! -name '*.java' -o -name '*.xlsx' -o -name '*.csv' -d
 # os.system("cp " + parent_dir + "/commands.txt commands.txt")
 print("\n=> Directory Cleaning Done !!!")
 
-path_of_und = parent_dir + "/scitools/bin/linux64/und"
+# path_of_und = parent_dir + "/scitools/bin/linux64/und"
+path_of_und = parent_dir + "/scitools/bin/pc-win64/und"
 # os.system("ln -s " + path_of_und)
 
 print("\n=> Starting metrics generation !!!")

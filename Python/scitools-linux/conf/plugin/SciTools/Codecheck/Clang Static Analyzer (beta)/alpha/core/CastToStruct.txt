@@ -1,0 +1,1 @@
+(C, C++) Check for cast from non-struct pointer to struct pointer.

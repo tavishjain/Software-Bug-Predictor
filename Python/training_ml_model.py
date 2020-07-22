@@ -2,27 +2,28 @@ import optparse, sys, os, re, time, subprocess
 from datetime import datetime
 from pathlib import Path
 from subprocess import *
-
-try:
-    import git
-    from sklearn.preprocessing import LabelEncoder
-    from sklearn.ensemble import RandomForestRegressor
-    import xlrd
-    import numpy as np
-    import pandas as pd
-except ImportError:
-    os.system("apt install python3-pip")
-    os.system("pip3 install gitpython")
-    os.system("pip3 install pandas")
-    os.system("pip3 install numpy")
-    os.system("pip3 install sklearn")
-    os.system("pip3 install xlrd")
-    import git 
-    from sklearn.preprocessing import LabelEncoder
-    from sklearn.ensemble import RandomForestRegressor
-    import numpy as np
-    import xlrd
-    import pandas as pd
+import numpy as np
+import scipy
+# try:
+#     import git
+#     from sklearn.preprocessing import LabelEncoder
+#     from sklearn.ensemble import RandomForestRegressor
+#     import xlrd
+#     import numpy as np
+#     import pandas as pd
+# except ImportError:
+#     os.system("apt install python3-pip")
+#     os.system("pip3 install gitpython")
+#     os.system("pip3 install pandas")
+#     os.system("pip3 install numpy")
+#     os.system("pip3 install sklearn")
+#     os.system("pip3 install xlrd")
+import pygit
+import openpyxl
+from sklearn.preprocessing import LabelEncoder
+from sklearn.ensemble import RandomForestRegressor
+import xlrd
+import pandas as pd
 
 parser  =   optparse.OptionParser()
 
@@ -33,11 +34,14 @@ if len(args):
 else:
     print ("You must specify a git object as the first argument")
     sys.exit(os.EX_NOINPUT)
+#########danger########
+if os.name == 'nt':
+	os.chdir(os.getcwd()+'\\Python')
 
 parent_directory = os.getcwd()
-training_dir = parent_directory + "/logs/training_data"
-testing_dir = parent_directory + "/logs/testing_data"
-results_dir = parent_directory + "/logs/results"
+training_dir = parent_directory + '/logs/training_data'
+testing_dir = parent_directory + '/logs/testing_data'
+results_dir = parent_directory + '/logs/results'
 
 training_data_file_name = path.split('/')[-1] + '_training_data.xlsx'
 testing_data_file_name = path.split('/')[-1] + '_testing_data.xlsx'
@@ -87,4 +91,4 @@ print(final_data)
 final_data = pd.DataFrame(final_data, columns = ['File_Name', 'Probability'])
 final_data.to_excel(results_dir + '/' + result_file_name)
 
-print(results_dir + '/' + result_file_name)
+print(result_file_name)

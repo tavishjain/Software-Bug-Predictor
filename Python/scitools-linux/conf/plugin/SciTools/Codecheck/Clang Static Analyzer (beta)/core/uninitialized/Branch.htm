@@ -1,0 +1,9 @@
+<p><b>1.1.1.10. core.uninitialized.Branch (C)</b><br>
+Check for uninitialized values used as branch conditions.</p>
+<p>Examples:
+<pre><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">test</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kt">int</span> <span class="n">x</span><span class="p">;</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="c1">// warn</span>
+    <span class="k">return</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div></pre></p>

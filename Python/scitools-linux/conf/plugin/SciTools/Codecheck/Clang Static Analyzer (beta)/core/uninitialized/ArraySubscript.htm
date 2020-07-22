@@ -1,0 +1,8 @@
+<p><b>1.1.1.8. core.uninitialized.ArraySubscript (C)</b><br>
+Check for uninitialized values used as array subscripts.</p>
+<p>Examples:
+<pre><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">test</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kt">int</span> <span class="n">i</span><span class="p">,</span> <span class="n">a</span><span class="p">[</span><span class="mi">10</span><span class="p">];</span>
+  <span class="kt">int</span> <span class="n">x</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">];</span> <span class="c1">// warn: array subscript is undefined</span>
+<span class="p">}</span>
+</pre></div></pre></p>

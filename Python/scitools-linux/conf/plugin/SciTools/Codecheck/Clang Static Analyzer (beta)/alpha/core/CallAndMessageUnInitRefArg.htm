@@ -1,0 +1,16 @@
+<p><b>1.2.2.1. alpha.core.CallAndMessageUnInitRefArg (C, C++, ObjC)</b><br>
+Check for logical errors for function calls and Objective-C message expressions (e.g., uninitialized arguments, null function pointers, and pointer to undefined variables).</p>
+<p>Examples:
+<pre><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">test</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kt">int</span> <span class="n">t</span><span class="p">;</span>
+  <span class="kt">int</span> <span class="o">&amp;</span><span class="n">p</span> <span class="o">=</span> <span class="n">t</span><span class="p">;</span>
+  <span class="kt">int</span> <span class="o">&amp;</span><span class="n">s</span> <span class="o">=</span> <span class="n">p</span><span class="p">;</span>
+  <span class="kt">int</span> <span class="o">&amp;</span><span class="n">q</span> <span class="o">=</span> <span class="n">s</span><span class="p">;</span>
+  <span class="n">foo</span><span class="p">(</span><span class="n">q</span><span class="p">);</span> <span class="c1">// warn</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="nf">test</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kt">int</span> <span class="n">x</span><span class="p">;</span>
+  <span class="n">foo</span><span class="p">(</span><span class="o">&amp;</span><span class="n">x</span><span class="p">);</span> <span class="c1">// warn</span>
+<span class="p">}</span>
+</pre></div></pre></p>

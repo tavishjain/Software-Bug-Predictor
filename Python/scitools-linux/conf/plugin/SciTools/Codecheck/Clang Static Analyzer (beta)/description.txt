@@ -1,0 +1,1 @@
+Employs symbolic execution and path-sensitive analysis to find potential bugs.

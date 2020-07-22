@@ -1,0 +1,343 @@
+# This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson
+# 10-31-14
+# It's a spooky check! Written by Spooky ghosts!
+
+
+# Boiler Plate code
+use base ( 'Understand::Codecheck' );
+use strict;
+
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => 'Keyword "void" not used to denote empty parameter list for function %1';
+use constant ERR2 => 'Improper parameter format for function %1; each parameter must have a type and a name';
+use constant ERR3 => 'Keyword "void" not used to denote empty parameter list for function pointer %1';
+use constant ERR4 => 'Improper parameter format for function pointer %1; each parameter must have a type and a name';
+
+
+# This registers ERR1 with Understand
+sub register_tr_text {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+  $check->add_tr_text(ERR2);
+  $check->add_tr_text(ERR3);
+  $check->add_tr_text(ERR4);
+}
+
+
+# This is the short error the Understand will use
+
+sub checkID { return "CPP_F009";}
+
+sub name{
+  return 'Function types shall be in prototype form with named parameters';
+}
+
+
+# This is the full description of the rule being tested
+sub description {
+  return '( Required ) Function types shall be in prototype form with named parameters.';
+}
+
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description {
+  return  <<"END_DESC"
+
+<p><b>Rationale</b><br>
+The early version of C, commonly referred to as K&R C [30], did not provide a mechanism for checking
+the number of arguments or their types against the corresponding parameters. The type of an object
+or function did not have to be declared in K&R C since the default type of an object and the default
+return type of a function was <i>int</i>.
+</p>
+
+<p>
+The C90 standard introduced function prototypes, a form of function declarator in which the
+parameter types were declared. This permitted argument types to be checked against parameter
+types. It also allowed the number of arguments to be checked except when a function prototype
+specified that a variable number of arguments was expected. The C90 standard did not <b>require</b> the
+use of function prototypes for reasons of backward compatibility with existing code. For the same
+reason, it continued to permit types to be omitted in which case the type would default to <i>int</i>.
+</p>
+
+<p>
+The C99 standard removed the default <i>int</i> type from the language but continued to allow K&R-style
+function types in which there was no means to supply parameter type information in a declaration
+and it was optional to supply parameter type information in a definition.
+</p>
+
+<p>
+The mismatch between the number of arguments and parameters, their types and the expected and
+actual return type of a function provides potential for undefined behaviour. The purpose of this rule
+is to avoid this undefined behaviour by requiring parameter types and function return types to be 
+specified explicitly. 
+</p>
+
+<p>
+This rule also requires that names be specified for all the parameters in a declaration. The parameter
+names can provide useful information regarding the function interface and a mismatch between a
+declaration and definition might be indicative of a programming error.
+</p>
+
+<p>
+<i>Note</i>: An empty parameter list is <b>not</b> valid in a prototype. If a function type has no parameters its
+<i>prototype form</i> uses the keyword <i>void</i>.
+</p>
+
+<p><b>Example</b><br>
+The first example shows declarations of some functions and the corresponding definitions for some
+of those functions.
+</p>
+
+<pre style="margin-top:0;padding-top:0;">
+
+  /* Compliant                                                  */
+  extern int16_t func1 ( int16_t n );
+
+  /* Non-compliant - parameter name not specified               */
+  extern void func2 ( int16_t );
+
+  /* Non-compliant - not in prototype form                      */
+  static int16_t func3 ( );
+
+  /* Compliant - prototype specifies 0 parameters               */
+  static int16_t func4 ( void );
+
+  /* Compliant                                                  */
+  int16_t func1 ( int16_t n )
+  {
+    return n;
+  }
+
+  /* Non-compliant - old style identifier and declaration list  */
+  static int16_t func3 ( vec, n )
+  int16_t *vec;
+  int16_t n;
+  {
+    return vec[ n - 1 ];
+  }
+
+</pre>
+
+<p>
+This example section shows the application of the rule to function types other than in function
+declarations and definitions.
+</p>
+
+<pre style="margin-top:0;padding-top:0;">
+
+  /* Non-compliant - no prototype                   */
+  int16_t ( *pf1 ) ( );
+
+  /* Compliant - prototype specifies 0 parameters   */
+  int16_t ( *pf1 ) ( void );
+
+  /* Non-compliant - parameter name not specified   */
+  typedef int16_t ( *pf2_t ) ( int16_t );
+
+  /* Compliant                                      */
+  typedef int16_t ( *pf3_t ) ( int16_t n );
+
+</pre>
+
+<p><b>Developer's Note</b><br>
+This check was designed for C and C does not have classes. This check will function on C++ code, 
+but it will ignore member functions as they add a level of complexity this script is not intended 
+to handle.
+</p>
+
+END_DESC
+}
+
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language eq "C++";
+}
+
+
+# This determines if this script is per file
+sub test_entity {
+  return 1;
+}
+
+
+# This determines if this script is per project or per file
+sub test_global {
+  return 0;
+}
+
+
+# Defined options for this check
+sub define_options{
+  my $check = shift; 
+  $check->option->checkbox( 'testVoid', 'Test for void when there is no parameter list', 1 ) 
+}
+
+
+# Check for void
+sub checkVoid {
+
+  # Sometimes Understand doesn't recognize the parameter list and treats this function as a void
+  # This is why we have three options
+  my $lexeme = shift;
+  
+  if ( $lexeme->text eq ')' ) {
+
+    return 0;
+
+  } elsif ( $lexeme->text eq 'void' or ( $lexeme->ent and $lexeme->ent->type eq 'void' ) ) {
+
+    return 1;
+
+  }
+  return 2;
+}
+
+
+# Parse the arguments
+sub parseArguments {
+
+  my $lexeme = shift;
+  my $check = shift;
+  my $ok = 1;
+  my $identifier = 0;
+  my $type = 0;
+
+  while ( $lexeme->text ne ')' ) {
+
+    if ( $lexeme->token eq 'Identifier' ) {
+
+      $identifier++;
+
+      # Test to see if this is a template argument, skip template instantiation if so
+      if ( $lexeme->ent and $lexeme->ent->kind->check( 'Template' ) and $lexeme->nextUseful->text eq '<' ) {
+
+        my $ent = $lexeme->ent;
+        my $ref = $lexeme->ref;
+
+        my $angeBracketCount = 0;
+        while ( ! ( $angeBracketCount == 1 and $lexeme->text eq '>' ) ) {
+
+          $angeBracketCount++ if $lexeme->text eq '<';
+          $angeBracketCount-- if $lexeme->text eq '>';
+          $lexeme = $lexeme->nextUseful;
+
+          #unless ( $lexeme ) {
+          #  $check->violation( $ent, $ref->file, $ref->line, $ref->column, 'About to crash' );
+          #}
+
+        }
+
+      }
+
+    } elsif ( $lexeme->text =~ /char|short|int|long|float|double|void|bool/ ) {
+
+      $type++;
+
+    } elsif ( $lexeme->text eq ',' ) {
+
+      $ok = 0 unless $identifier and $type or $identifier > 1;
+      $identifier = 0;
+      $type = 0;
+
+    } elsif ( $lexeme->text eq '...' ) {
+
+      $identifier++;
+      $type++;
+
+    } elsif ( $lexeme->text eq '::' ) {
+
+      $identifier--;
+
+    }
+
+    $lexeme = $lexeme->nextUseful;
+
+  }
+  $ok = 0 unless $identifier and $type or $identifier > 1;
+
+  return $ok;
+
+}
+
+
+# This is the actual test being performed on the user's code
+sub check {
+
+  # Pull the check and file from calling function, return unless file
+  my $check = shift;
+  my $file = shift;
+  return unless $file->kind->check( 'file' );
+
+  # This is two part check. Part one checks traditional functions where part two
+  # Checks function pointers
+
+  # Part 1
+  # Pull all functions
+  my @functionsDefined = $file->filerefs( 'Define, Declare', 'Function ~Member ~Lambda');
+
+  # Loop through all the functions
+  FNC : foreach my $function ( @functionsDefined ) {
+
+    # For some reason I am getting built in function... not sure why
+    ######
+    next if $function->ent->name =~ /^__/;
+    ######
+    # Short circuit solution for this anomoly
+
+    # Spin up a lexer and move into the parameter list
+    #my $lexeme = $function->lexeme;
+    my $lexeme = $function->lexeme( 1, 8, 1, 0 );
+    next FNC unless $lexeme;
+
+    while( $lexeme->text ne '(' ) {
+
+      next FNC if $lexeme->text eq '<' or $lexeme->text eq '{' or $lexeme->text eq ';';
+      $lexeme = $lexeme->nextUseful;
+
+    }
+    $lexeme = $lexeme->nextUseful;
+
+    unless ( $function->ent->parameters ) {
+
+      my $good = checkVoid ( $lexeme );
+      $check->violation( $function->ent, $function->file, $function->line, $function->column, ERR1, $function->ent->name ) if !( $good ) and $check->option->lookup( 'testVoid' );
+      next unless $good == 2;
+
+    }
+
+    my $good = parseArguments ( $lexeme, $check );
+    $check->violation( $function->ent, $function->file, $function->line, $function->column, ERR2, $function->ent->name ) unless $good;
+
+  }
+
+  # Part 2
+  # Pull all pointers, return if non exists
+
+  my @pointersDefined = $file->filerefs( 'Define, Declare', 'Object ~TemplateParameter, Typedef' );
+
+  foreach my $pointer ( @pointersDefined ) {
+
+    next unless $pointer->ent->type =~ /\(\*\)\([^\)]*\)/;
+
+    # Spin up a lexer and move into the parameter list
+    my $lexeme = $pointer->lexeme;
+    next unless $lexeme;
+
+    $lexeme = $lexeme->nextUseful;
+    $lexeme = $lexeme->nextUseful;
+    $lexeme = $lexeme->nextUseful;
+
+    my $good = checkVoid ( $lexeme );
+    $check->violation( $pointer->ent, $pointer->file, $pointer->line, $pointer->column, ERR3, $pointer->ent->name ) if !( $good ) and $check->option->lookup( 'testVoid' );
+    next unless $good == 2;
+
+    my $alsoGood = parseArguments ( $lexeme, $check );
+    $check->violation( $pointer->ent, $pointer->file, $pointer->line, $pointer->column, ERR4, $pointer->ent->name ) unless $alsoGood;
+
+  }
+
+}

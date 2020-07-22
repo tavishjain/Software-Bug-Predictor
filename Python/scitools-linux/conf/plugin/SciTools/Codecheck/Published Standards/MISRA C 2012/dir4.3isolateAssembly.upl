@@ -1,0 +1,178 @@
+# This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson
+# 6-19-15
+
+
+# Boiler Plate code
+use base ("Understand::Codecheck");
+use strict;
+
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => 'Assembly code must be isolated in a function';
+
+
+# This registers ERR1 with Understand
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+sub checkID { return "MISRA12_4.3";}
+
+
+
+# This is the short error the Understand will use
+sub name { 
+  return 'Directive 4.3 Assembly language shall be encapsulated and isolated';
+}
+
+
+# This is the full description of the rule being tested
+sub description { 
+  return 'Directive 4.3 ( Required ) Assembly language shall be encapsulated and isolated.';
+}
+
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description { return <<"END_DESC"
+
+<p><b>Amplification</b><br>
+Where assembly language instructions are used they shall be encapsulated and isolated in:
+</p>
+
+<p>
+  • Assembly language functions;
+</p>
+
+<p>
+  • C functions ( inline functions preferred for C99 );
+</p>
+
+<p>
+  • C macros.
+</p>
+
+<p><b>Rationale</b><br>
+For reasons of efficiency it is sometimes necessary to embed simple assembly language instructions
+in-line, for example to enable and disable interrupts. If this is necessary, then it is recommended that
+it be achieved by using macros, or for C99, inline functions.</p>
+
+<p>
+Encapsulating assembly language is benefi cial because:
+</p>
+
+<p>
+• It improves readability;
+</p>
+
+<p>
+• The name, and documentation, of the encapsulating macro or function makes the intent of
+the assembly language clear;
+</p>
+
+<p>
+• All uses of assembly language for a given purpose can share the same encapsulation which
+improves maintainability;
+</p>
+
+<p>
+• The assembly language can easily be substituted for a diff erent target or for purposes of
+static analysis.
+</p>
+
+<p>
+<em>Note:</em> the use of in-line assembly language is an extension to standard C, and therefore violates
+Rule 1.2.
+</p>
+
+<p><b>Example</b><br>
+</p>
+
+<pre style="margin-top:0;padding-top:0;">
+
+  #define NOP asm(" NOP")
+
+</pre>
+
+END_DESC
+}
+
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+
+# This determines if this script is per file
+sub test_entity { 
+  return 1;
+}
+
+
+# This determines if this script is per project or per file
+sub test_global { 
+  return 0;
+}
+
+
+# Any defined options go here
+sub define_options{
+}
+
+
+sub check {
+  
+  my $check = shift; 
+  my $file = shift; 
+  return unless $file->kind->check("c file"); 
+  my $lexer = $file->lexer;
+  return unless $lexer;
+  
+  my $lexeme = $lexer->first();
+  my $inFunc =0;
+  my $endRef;
+  my @asmStatements=();
+  my $lastent;
+  
+  while($lexeme){
+    #Yield to GUI interupts
+    $check->yield();
+    return if $check->is_abort();
+    
+    #determine if we are in a function
+    if($lexeme->ref && $lexeme->ent->kind->check("function")){
+      $inFunc = $lexeme->ent if $lexeme->ref->kind->check("definein"); 
+      $endRef = $inFunc->ref("endby") if $inFunc;
+      unless ( $endRef ) {
+        $inFunc = 0;
+        next;
+      }
+    }
+    if ($inFunc && $lexeme->line_begin >= $endRef->line && $lexeme->column_begin >= $endRef->column){
+      # we are at the end of the function and need to determine if the number of assembly statements
+      # is a healthy percentage of the total statements. Right now all statements need to be assembly
+      my $stmts = $inFunc->metric("CountStmt");
+      if (@asmStatements && @asmStatements < $stmts){
+        foreach my $asmLex(@asmStatements){
+          #$check->violation($inFunc,$file,-1,-1,@asmStatements);
+          $check->violation($inFunc,$file,$asmLex->line_begin,$asmLex->column_begin,ERR1);
+        }
+      }
+      @asmStatements=();
+      $inFunc = 0;
+    }
+
+    if($lexeme->token eq "Keyword" && $lexeme->text =~ /^[_]*asm[_]*$/i){
+      if($inFunc){
+        push(@asmStatements,$lexeme);
+      }else{
+        $check->violation(0,$file,$lexeme->line_begin,$lexeme->column_begin,ERR1);
+      }
+    }
+  }continue{
+    $lexeme=$lexeme->next if $lexeme;
+  }
+}

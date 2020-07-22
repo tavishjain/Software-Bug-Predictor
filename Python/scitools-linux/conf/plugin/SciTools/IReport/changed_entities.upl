@@ -1,0 +1,504 @@
+our $comparison_db;
+our @kind_color = ("#3399FF", "green", "red", "gray");
+our $percent_div;
+our $percent;
+our @metrics_opts;
+our $met_opts_len;
+
+use base ("Understand::IReport");
+use strict;
+
+sub name { return "Changed Entities";}
+
+sub test_entity { return -1; }
+
+sub test_architecture { return -1; }
+
+sub test_global { return 1; }
+
+# Indicate this report supports displaying the progress bar.
+sub support_progress { return 1; }
+
+# Indicate this report supports the cancel button.
+sub support_abort { return 1; }
+our $abort_called;
+
+# This function is called when the cancel button is clicked
+sub abort{
+  $abort_called=1;
+}
+
+sub init {
+  my $report = shift;
+  
+  $abort_called=0;  # Reset cancel flag
+  
+  $report->option->label("Info", "The Changed Entities Report evaluates the differences between every entity in the current and comparison projects. This may take a long time if the projects are large!\n");
+  $report->option->choice("unresolved","Unresolved entities",["On","Off"],"Off");
+  $report->option->choice("modified", "Ignore comments/spaces/newlines for modified entities", ["On", "Off"],"On");
+  $report->option->checkbox_vert("metrics", 
+                                 "Included Metrics", 
+                                 ["CountLineCode", "Cyclomatic"], 
+                                 ["Off", "Off"]);
+  
+  $comparison_db = $report->db->comparison_db;
+}
+
+sub generate {
+  my $report = shift;
+  
+  if (!defined $comparison_db) {
+    return;
+  }
+  
+  @metrics_opts = $report->option->lookup("metrics");
+  $met_opts_len = scalar @metrics_opts;
+  
+  $percent_div = 0;
+  $percent = 0;
+  
+  my @ents = ();
+  my @comp_ents = ();
+  if ($report->option->lookup("unresolved") eq "Off") {
+    @ents = $report->db->ents("~undefined,~unknown,~unresolved");
+    @comp_ents = $comparison_db->ents("~undefined,~unknown,~unresolved");
+  } else {
+    @ents = $report->db->ents();
+    @comp_ents = $comparison_db->ents();
+  }
+  
+  # Use a 2D hash to hash ents by kind, and then uniquename
+  my %ents_hash;
+  foreach my $ent (@ents) {
+    if (!$ent->library()) {
+      my $kindname = $ent->kindname();
+      my $uniquename = $ent->uniquename();
+      $ents_hash{$kindname}{$uniquename} = $ent;
+      $percent_div++;
+    }
+  }
+  my %comp_ents_hash;
+  foreach my $comp_ent (@comp_ents) {
+    if (!$comp_ent->library()) {
+      my $kindname = $comp_ent->kindname();
+      my $uniquename = $comp_ent->uniquename();
+      $comp_ents_hash{$kindname}{$uniquename} = $comp_ent;
+      $percent_div++;
+    }
+  }
+
+  # Get lists of new, old, and both kinds
+  my @kinds_both = grep { exists $comp_ents_hash{$_} } sort keys %ents_hash;
+  my @kinds_new = grep { !exists $comp_ents_hash{$_} } sort keys %ents_hash;
+  my @kinds_old = grep { !exists $ents_hash{$_} } sort keys %comp_ents_hash;
+  
+  # Print kinds that exist in both udbs
+  foreach my $kind (@kinds_both) {
+    if (!$abort_called) {
+      my @ents_both = ();
+      my @ents_new = ();
+      my @ents_old = ();
+      
+      # Get lists of entities in both/new/old udbs for given kind
+      my @ents_both_keys = grep { exists $comp_ents_hash{$kind}{$_} } keys %{ $ents_hash{$kind} };    
+      foreach my $key (@ents_both_keys) { push @ents_both, $ents_hash{$kind}{$key}; }
+      my @ents_new_keys = grep { !exists $comp_ents_hash{$kind}{$_} } keys %{ $ents_hash{$kind} };
+      foreach my $key (@ents_new_keys) { push @ents_new, $ents_hash{$kind}{$key}; }
+      my @ents_old_keys = grep { !exists $ents_hash{$kind}{$_} } keys %{ $comp_ents_hash{$kind} };
+      foreach my $key (@ents_old_keys) { push @ents_old, $comp_ents_hash{$kind}{$key}; }
+
+      # Sort by name
+      @ents_both = sort{$a->name cmp $b->name} @ents_both;
+      @ents_new = sort{$a->name cmp $b->name}  @ents_new;
+      @ents_old = sort{$a->name cmp $b->name}  @ents_old;
+
+      my @ents_both_mod = ();
+      my @ents_both_unc = ();
+      foreach my $ent (@ents_both) {
+        my $comp_ent = $comparison_db->lookup_uniquename($ent->uniquename);
+        if (defined $comp_ent) {
+          if (compare_contents($ent, $comp_ent, $report)) {
+            push(@ents_both_unc, $ent);
+          } else {
+            push(@ents_both_mod, $ent);
+          }
+        } else {
+          push(@ents_new, $ent);
+        }
+      }
+      
+      generate_tree($report, $kind, \@ents_both_unc, \@ents_both_mod, \@ents_new, \@ents_old);
+    }
+  }
+  
+  # Kinds only in new udb
+  foreach my $kind (@kinds_new) {
+    if (!$abort_called) {
+      my @kind_ents = $ents_hash{$kind};
+      
+      my @ents_new = ();
+      foreach my $uniquename (keys %{ $ents_hash{$kind} }) {
+        push @ents_new, $ents_hash{$kind}{$uniquename};
+      }
+      
+      @ents_new = sort{$a->name cmp $b->name}  @ents_new;
+      
+      generate_tree_onedb($report, $kind, 1, \@ents_new);
+    }
+  }
+  
+  # Kinds only in old udb
+  foreach my $kind (@kinds_old) {
+    if (!$abort_called) {
+      my @kind_ents = $ents_hash{$kind};
+      
+      my @ents_old = ();
+      foreach my $uniquename (keys %{ $comp_ents_hash{$kind} }) {
+        push @ents_old, $comp_ents_hash{$kind}{$uniquename};
+      }
+      @ents_old = sort{$a->name cmp $b->name}  @ents_old;
+      
+      generate_tree_onedb($report, $kind, 2, \@ents_old);
+    }
+  }
+  
+  $report->progress(99, "99% complete");
+}
+
+# Generate a tree for a kind in both projects
+sub generate_tree {
+  my $report     = shift;
+  my $kind       = shift;
+  my ($r_ents_both_unc, $r_ents_both_mod, $r_ents_new, $r_ents_old) = @_;
+  
+  my @ents_both_unc = @{ $r_ents_both_unc };
+  my @ents_both_mod = @{ $r_ents_both_mod };
+  my @ents_new = @{ $r_ents_new };
+  my @ents_old = @{ $r_ents_old };
+  my $kind_num_ents = scalar @ents_both_unc + scalar @ents_both_mod + scalar @ents_new + scalar @ents_old;
+  
+  # Print kind (top of tree) (Default expanded)
+  $report->tree(1,1);
+  $report->bold();
+  $report->fontcolor();
+  my $kind_title = $kind . " (" . $kind_num_ents . ")";
+  $report->print($kind_title);
+  $report->nobold();
+  
+  # Unchanged ents in both udbs (Default collapsed)
+  if (@ents_both_unc) {
+    $report->tree(2,1);
+    my $unc_title = "Unchanged Entities in Both (" . scalar @ents_both_unc . ")";
+    $report->print($unc_title);
+    foreach my $ent (@ents_both_unc) {
+      $report->tree(3,0);
+      $report->entity($ent);
+      $report->print($ent->name);
+      $report->entity();
+      $report->tree(4,0);
+      metrics($report, $ent, 0);
+    }
+  }
+  
+  # Modified ents in both udbs (Default collapsed)
+  if (@ents_both_mod) {
+    $report->tree(2,1);
+    $report->fontcolor($kind_color[0]);
+    my $mod_title = "Modified Entities in Both (" . scalar @ents_both_mod . ")";
+    $report->print($mod_title);
+    foreach my $ent (@ents_both_mod) {
+      $report->tree(3,0);
+      $report->entity($ent);
+      $report->print($ent->name);
+      $report->entity();
+      $report->tree(4,0);
+      metrics($report, $ent, 1);
+    }
+  }
+  
+  # Ents only in new udb (Default collapsed)
+  if (@ents_new) {
+    $report->tree(2,1);
+    $report->fontcolor($kind_color[1]);
+    my $new_title = "New Entities (" . scalar @ents_new . ")";
+    $report->print($new_title);
+    $report->fontcolor();
+    foreach my $ent (@ents_new) {
+      if ($ent) {
+        $report->tree(3,0);
+        $report->entity($ent);
+        $report->print($ent->name);
+        $report->entity();
+        $report->tree(4,0);
+        metrics($report, $ent, 0);
+      }
+    }
+  }
+  
+  # Ents only in old udb (Default collapsed)
+  if (@ents_old) {
+    $report->tree(2,1);
+    $report->fontcolor($kind_color[2]);
+    my $old_title = "Old Entities (" . scalar @ents_old . ")";
+    $report->print($old_title);
+    $report->fontcolor();
+    foreach my $ent (@ents_old) {
+      if ($ent) {
+        $report->tree(3,0);
+        if ($ent->ref()) {
+          my $file = $ent->ref()->file()->longname();
+          my $line = $ent->ref()->line();
+          my $col = $ent->ref()->column();
+          $report->hover($file . ' (' . $line . ':' . $col . ')');
+          $report->print($ent->name());
+          $report->hover();
+          $report->tree(4,0);
+          metrics($report, $ent, 0);
+        } else {
+          $report->fontcolor($kind_color[3]);
+          $report->hover("Entity reference does not exist");
+          $report->print($ent->name());
+          $report->hover();
+          $report->tree(4,0);
+          metrics($report, $ent, 0);
+        }
+      }
+    }
+  }
+  
+  $report->tree();
+  
+  my $pct = (2 * scalar @ents_both_unc) + (2 * scalar @ents_both_mod) + scalar @ents_new + scalar @ents_old;
+  $pct = ($pct / $percent_div) * 100;
+  $percent = $percent + $pct;
+  my $rounded = int($percent + 0.5);
+  if ($rounded > 99) { $rounded = 99 };
+  $report->progress($rounded, $rounded."% complete");
+}
+
+# Generate a tree for a kind only in one udb (new/old)
+sub generate_tree_onedb {
+  my $report     = shift;
+  my $kind       = shift;
+  my $base_color = shift;
+  my $r_ents     = shift;
+  
+  my @ents       = @{ $r_ents };
+
+  # Print kind (top of tree)
+  $report->tree(1,1);
+  $report->bold();
+  $report->fontcolor($kind_color[$base_color]);
+  $report->print($kind);
+  $report->nobold();
+  
+  # Print entities (all new/old if kind new/old)
+  $report->tree(2,1);
+  $report->fontcolor($kind_color[$base_color]);
+  if ($base_color == 1) {
+    my $new_title = "New Entities (" . scalar @ents . ")";
+    $report->print($new_title);
+    foreach my $ent (@ents) {
+      if ($ent) {
+        $report->tree(3,0);
+        $report->entity($ent);
+        $report->print($ent->name());
+        $report->entity();
+        $report->tree(4,0);
+        metrics($report, $ent, 0);
+      }
+    }
+  } else {
+    my $old_title = "Old Entities (" . scalar @ents . ")";
+    $report->print($old_title);
+    $report->fontcolor();
+    foreach my $ent (@ents) {
+      if ($ent) {
+        $report->tree(3,0);
+        if ($ent->ref()) {
+          my $file = $ent->ref()->file()->longname();
+          my $line = $ent->ref()->line();
+          my $col = $ent->ref()->column();
+          $report->hover($file . ' (' . $line . ':' . $col . ')');
+          $report->print($ent->name());
+          $report->hover();
+          $report->tree(4,0);
+          metrics($report, $ent, 0);
+        } else {
+          $report->fontcolor($kind_color[3]);
+          $report->hover("Entity reference does not exist");
+          $report->print($ent->name());
+          $report->hover();
+          $report->tree(4,0);
+          metrics($report, $ent, 0);
+        }
+      }
+    }
+  }
+
+  $report->tree();
+  
+  my $pct = scalar @ents;
+  $pct = ($pct / $percent_div) * 100;
+  $percent = $percent + $pct;
+  my $rounded = int($percent + 0.5);
+  if ($rounded > 99) { $rounded = 99 };
+  $report->progress($rounded, $rounded."% complete");
+}
+
+
+# Compare new/old entity contents to check for modifications
+sub compare_contents {
+  my $ent       = shift;
+  my $comp_ent  = shift;
+  my $report    = shift;
+  
+  my $cont = $ent->contents;
+  my $comp_cont = $comp_ent->contents;
+  
+  if ($report->option->lookup("modified") eq "On") {
+    # Get language
+    my $lang = $ent->language();
+    
+    # Remove comments
+    if ($lang eq "Ada" || $lang eq "VHDL") {
+      # Remove any -- style comments
+      $cont =~ s/\-\-.*?\n//g;
+      $comp_cont =~ s/\-\-.*?\n//g;
+    } elsif ($lang eq "C" || $lang eq "C#" || $lang eq "Java" || $lang eq "Plm") {
+      # Remove any // style comments
+      $cont =~ s/\/\/.*?\n//g;
+      $comp_cont =~ s/\/\/.*?\n//g;
+      # Remove any /* */ style comments
+      $cont =~ s/\/\*.*?\*\///gs;
+      $comp_cont =~ s/\/\*.*?\*\///gs;
+    } elsif ($lang eq "Fortran") {
+      # Remove any ! style comments
+      $cont =~ s/\!.*?\n//g;
+      $comp_cont =~ s/\!.*?\n//g;
+      # Remove any (c,C,*,d,D) first character comments
+      $cont =~ s/^[cC*dD].*?\n//g;
+      $comp_cont =~ s/^[cC*dD].*?\n//g;
+    } elsif ($lang eq "Jovial") {
+      # Remove any " " style comments
+      $cont =~ s/\".*?\"//gs;
+      $comp_cont =~ s/\".*?\"//gs;
+      # Remove any % % style comments
+      $cont =~ s/\%.*?\%//gs;
+      $comp_cont =~ s/\%.*?\%//gs;
+    } elsif ($lang eq "Pascal") {
+      # Remove any // style comments
+      $cont =~ s/\/\/.*?\n//g;
+      $comp_cont =~ s/\/\/.*?\n//g;
+      # Remove any (* *) style comments
+      $cont =~ s/\(\*.*?\*\)//gs;
+      $comp_cont =~ s/\(\*.*?\*\)//gs;
+      # Remove any { } style comments
+      $cont =~ s/\{.*?\}//gs;
+      $comp_cont =~ s/\{.*?\}//gs;
+    } elsif ($lang eq "Web") {
+      # Remove any <!--  --> style comments (HTML)
+      $cont =~ s/\<\!\-\-.*?\-\-\>//gs;
+      $comp_cont =~ s/\<\!\-\-.*?\-\-\>//gs;
+      # Remove any // style comments (PHP/Javascript)
+      $cont =~ s/\/\/.*?\n//g;
+      $comp_cont =~ s/\/\/.*?\n//g;
+      # Remove any /* */ style comments (PHP/Javascript)
+      $cont =~ s/\/\*.*?\*\///gs;
+      $comp_cont =~ s/\/\*.*?\*\///gs;
+    }
+    
+    #Remove all whitespaces (\s) and newlines (\r\n)
+    $cont =~ s/[\s\r\n]+//g;
+    $comp_cont =~ s/[\s\r\n]+//g;
+  }
+  
+  my $result;
+  if ($cont eq $comp_cont) { 
+    $result = 1; 
+    return $result;
+  }
+  $result = 0;
+  return $result;
+}
+
+
+# Get specified metrics for given entity
+sub metrics {
+  my $report    = shift;
+  my $ent       = shift;
+  my $comp      = shift;
+  
+  my $clc;
+  my $cyc;
+  
+  if (!$comp) {
+    if ( grep { $_ eq "CountLineCode" } @metrics_opts) {
+      $clc = $ent->metric("CountLineCode");
+      if (!$clc eq "") {
+        $report->print("CountLineCode: $clc");
+      }
+    }
+    if (!$clc eq "" && $met_opts_len eq 2) { $report->print("\n"); }
+    if ( grep { $_ eq "Cyclomatic" } @metrics_opts) {
+      $cyc = $ent->metric("Cyclomatic");
+      if ($cyc eq 0 || $cyc eq "") {
+        $cyc = $ent->metric("SumCyclomatic");
+        if (!$cyc eq "") {
+          $report->print("SumCyclomatic: $cyc");
+        }
+      } else {
+        $report->print("Cyclomatic: $cyc");
+      }
+    }
+  } else {
+    my $comp_ent = $comparison_db->lookup_uniquename($ent->uniquename);
+    if ( grep { $_ eq "CountLineCode" } @metrics_opts) {
+      $clc = $ent->metric("CountLineCode");
+      my $comp_clc = $comp_ent->metric("CountLineCode");
+      if (!$clc eq "") {
+        $report->fontcolor();
+        $report->print("CountLineCode: ");
+        $report->fontcolor($kind_color[2]);
+        $report->print("$comp_clc (Old)");
+        $report->fontcolor();
+        $report->print(" -> ");
+        $report->fontcolor($kind_color[1]);
+        $report->print("$clc (New)");
+        $report->fontcolor();
+      }
+    }
+    if (!$clc eq "" && $met_opts_len eq 2) { $report->print("\n"); }
+    if ( grep { $_ eq "Cyclomatic" } @metrics_opts) {
+      $cyc = $ent->metric("Cyclomatic");
+      if ($cyc eq 0 || $cyc eq "") {
+        $cyc = $ent->metric("SumCyclomatic");
+        my $comp_cyc = $comp_ent->metric("SumCyclomatic");
+        if (!$cyc eq "") {
+          $report->fontcolor();
+          $report->print("SumCyclomatic: ");
+          $report->fontcolor($kind_color[2]);
+          $report->print("$comp_cyc (Old)");
+          $report->fontcolor();
+          $report->print(" -> ");
+          $report->fontcolor($kind_color[1]);
+          $report->print("$cyc (New)");
+          $report->fontcolor();
+        }
+      } else {
+        my $comp_cyc = $comp_ent->metric("Cyclomatic");
+        if (!$cyc eq "") {
+          $report->fontcolor();
+          $report->print("Cyclomatic: ");
+          $report->fontcolor($kind_color[2]);
+          $report->print("$comp_cyc (Old)");
+          $report->fontcolor();
+          $report->print(" -> ");
+          $report->fontcolor($kind_color[1]);
+          $report->print("$cyc (New)");
+          $report->fontcolor();
+        }
+      }
+    }
+  }
+}

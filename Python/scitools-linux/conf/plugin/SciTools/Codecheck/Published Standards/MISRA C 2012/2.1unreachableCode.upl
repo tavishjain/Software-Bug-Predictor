@@ -1,0 +1,289 @@
+# This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson
+# 1-23-15
+
+
+# Boiler Plate code
+use base ( 'Understand::Codecheck' );
+use Understand::Flowchart;
+use strict;
+
+
+# This is the short error the Understand will use
+sub name{
+  return '2.1 A project shall not contain unreachable code';
+}
+
+sub checkID { return "MISRA12_2.1";}
+
+
+
+# This is the full description of the rule being tested
+sub description {
+  return '2.1 ( Required ) A project shall not contain unreachable code.';
+}
+
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description {
+  return  <<"END_DESC"
+
+<p><b>Rationale</b><br>
+Provided that a program does not exhibit any undefined behaviour, unreachable code cannot be
+executed and cannot have any eff ecton the program’s outputs. The presence of unreachable code
+may therefore indicate an error in the program’s logic.
+</p>
+
+<p>
+A compiler is permitted to remove any unreachable code although it does not have to do so. Unreachable
+code that is not removed by the compiler wastes resources, for example:
+</p>
+
+<ul>
+<li>
+It occupies space in the target machine’s memory;
+</li>
+<li>
+Its presence may cause a compiler to select longer, slower jump instructions when transferring
+control around the unreachable code;
+</li>
+<li>
+Within a loop, it might prevent the entire loop from residing in an instruction cache.
+</li>
+</ul>
+
+<p>
+It is sometimes desirable to insert code that appears to be unreachable in order to handle exceptional
+cases. For example, in a switch statement in which every possible value of the controlling expression
+is covered by an explicit case, a default clause shall be present according to Rule 16.4. The purpose of
+the default clause is to trap a value that should not normally occur but that may have been generated
+as a result of:
+</p>
+
+<ul>
+<li>
+Undefined behaviour present in the program;
+</li>
+<li>
+A failure of the processor hardware.
+</li>
+</ul>
+
+<p>
+If a compiler can prove that a default clause is unreachable, it may remove it, thereby eliminating the
+defensive action. On the assumption that the defensive action is important, it will be necessary either
+to demonstrate that the compiler does not eliminate the code despite it being unreachable, or to
+take steps to make the defensive code reachable. The former course of action requires a deviation
+against this rule, probably with a review of the object code or unit testing being used to support such
+a deviation. The latter course of action can usually be achieved by means of a volatile access. For
+example, a compiler might determine that the range of values held by x is covered by the case clauses
+in a switch statement such as:
+</p>
+
+<pre style="margin-top:0;padding-top:0;">
+
+uint16_t x;
+
+switch ( x )
+
+</pre>
+
+<p>
+By forcing x to be accessed by means of a volatile qualified lvalue, the compiler has to assume that the
+controlling expression could take any value:
+</p>
+
+<pre style="margin-top:0;padding-top:0;">
+
+switch ( *( volatile uint16_t * ) &x )
+
+</pre>
+
+<p>
+<em>Note:</em> code that has been conditionally excluded by pre-processor directives is not subject to this rule
+as it is not presented to the later phases of translation.
+</p>
+
+<p><b>Example</b><br>
+</p>
+
+<pre style="margin-top:0;padding-top:0;">
+
+  enum light { red, amber, red_amber, green };
+
+  enum light next_light ( enum light c )
+  {
+    enum light res;
+    switch ( c )
+    {
+      case red:
+        res = red_amber;
+        break;
+      case red_amber:
+        res = green;
+        break;
+      case green:
+        res = amber;
+        break;
+      case amber:
+        res = red;
+        break;
+      default:
+      {
+         /*
+          * This default will only be reachable if the parameter c
+          * holds a value that is not a member of enum light.
+          */
+        error_handler ( );
+        break;
+      }
+    }
+    return res;
+    res = c;  /* Non-compliant - this statement is
+               * certainly unreachable */
+  }
+
+</pre>
+
+<p><b>See also</b><br>
+R ule 14.3, Rule 16.4
+</p>
+
+END_DESC
+}
+
+
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/;
+  return 1;
+}
+
+sub test_entity {
+  my $entity = shift;
+  my $result = isValidFlowchartEntity($entity);
+  return $result ? 1 : -1;
+}
+
+sub test_global {
+  return 0;
+}
+
+sub define_option{
+  my $check = shift;
+}
+
+sub check {
+  my $check = shift;
+  my $file = shift;
+  return unless $file->kind->check("c file ~dll");
+  
+  my @funcRefs = $file->filerefs("definein, body declarein","c function ~unknown ~unresolved".
+   ",java method ~abstract".
+   ",fortran subroutine, fortran function, fortran main program ~unknown ~unresolved".
+   ",c# method ~abstract".
+   ",vhdl procedure, vhdl function".
+   ",ada procedure, ada function, ada task",1);
+  
+  FUNC:foreach my $funcRef (@funcRefs){
+    my $func = $funcRef->ent;
+    next FUNC unless $func->freetext("CGraph");
+    my @nodes = ();
+      my $id=1;
+    foreach my $fields (split(";", $func->freetext("CGraph"))) {
+      my %node = {};
+      my @parents = ();
+      ($node{kind}, $node{sline}, $node{scol}, $node{eline}, $node{ecol},
+       $node{endstr}, my @children) = split(",", $fields);
+      $node{id} = $id++;
+      $node{fields} = $fields;
+      $node{parents} = \@parents;
+      $node{children} = \@children;
+      push(@nodes, \%node);
+    }
+    # connect nodes
+    my $start = $nodes[0];
+    my $end = $nodes[-1];
+    foreach my $node (@nodes) {
+      my @children = ();
+      foreach my $id (@{$node->{children}}) {
+        my $child = $nodes[$id - 1];
+        push(@{$child->{parents}}, $node);
+        push(@children, $child);
+      }
+      $node->{children} = \@children;
+    }
+      
+    traverse($start);
+    filter(\@nodes);
+    collapse(\@nodes);
+
+    foreach my $node(@nodes){
+      next if $node == $end;
+      if (!$node->{filtered} &&!$node->{reachable}){
+        $check->violation($func,$file,$node->{sline},$node->{scol},"Unreachable Code"); 
+        next FUNC;
+      }
+    }
+  }
+}
+
+# mark children reachable from node as 'reachable'
+sub traverse {
+  my $node = shift;
+  $node->{reachable} = 1;
+  foreach my $child (@{$node->{children}}) {
+    if (!$child->{reachable}) {
+      traverse($child);
+    }
+  }
+}
+
+sub filter {
+  my $nodes = shift;
+
+  # mark implicit nodes as 'filtered'
+  my $start = $nodes->[0];
+  my $end = $nodes->[-1];
+  foreach my $node (@$nodes) {
+    my $kind = $node->{kind};
+    if (($kind == 36 && $node != $start && $node != $end) ||
+        ($kind == 39 && @{$node->{children}} <= 1) ||
+        $kind == 0 || $kind == 4 || $kind == 7 || $kind == 8 || $kind == 9 ||
+        $kind == 15 || $kind == 24 || $kind == 42 || $kind == 45 ||
+        $kind == 75 || $kind == 84) {
+      $node->{filtered} = 1;
+    } elsif ($kind >= 78 && $kind <= 82) {
+      $node->{deferred} = 1;
+    }
+  }
+}
+
+sub collapse {
+  my $nodes = shift;
+
+  # collapse node into parent and mark as 'filtered'
+  foreach my $node (@$nodes) {
+    if (@{$node->{children}} == 1) {
+      my $kind = $node->{kind};
+      my $child = $node->{children}->[0];
+      if ($kind == 35 && $child->{kind} == 35 &&
+          @{$child->{parents}} == 1) {
+        $child->{collapse} = $node;
+        $child->{filtered} = 1;
+      }
+    }
+  }
+}
+
+sub children {
+  my $node = shift;
+
+  # skip edges to filtered nodes
+  my @children = ();
+  foreach my $child (@{$node->{children}}) {
+    push(@children, $child->{filtered} ? children($child) : $child);
+  }
+
+  return @children;
+}

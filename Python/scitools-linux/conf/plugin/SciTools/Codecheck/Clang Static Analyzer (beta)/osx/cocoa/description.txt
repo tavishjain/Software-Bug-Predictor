@@ -1,0 +1,1 @@
+Checkers specific to OSX, for the Security Keychain, Cocoa, and Core Foundation APIs.

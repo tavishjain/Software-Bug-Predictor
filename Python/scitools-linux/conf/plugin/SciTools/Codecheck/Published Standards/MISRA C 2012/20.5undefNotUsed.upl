@@ -1,0 +1,71 @@
+#This script is designed to run with Understand - CodeCheck
+use base ("Understand::Codecheck");
+use strict;
+
+
+use constant ERR1 => '#undef used';
+
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+sub checkID { return "MISRA12_20.5";}
+
+
+sub name { return "20.5 #undef should not be used";}
+
+sub description { return "20.5 (Advisory) #undef should not be used";}
+
+sub detailed_description { return <<"END_DESC"
+<p><b>Rationale</b><br>
+The use of #undef can make it unclear which macros exist at a particular point within a translation
+unit.
+</p>
+
+<b>Example</b><pre style="margin-top:0;padding-top:0;">
+#define QUALIFIER volatile
+
+#undef QUALIFIER /* Non-compliant */
+
+void f ( QUALIFIER int32_t p )
+{
+  while ( p != 0 )
+  {
+    ; /* Wait... */
+  }
+}
+</pre>
+END_DESC
+}
+
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+sub test_entity { return 1;}
+
+sub test_global { return 0;}
+
+sub define_options{}
+
+sub check {
+  my $check = shift; 
+  my $file = shift; 
+  return unless $file->kind->check("c file ~unknown ~unresolved");
+  return unless $file->filerefs("set","macro");
+  
+  my $lexer = $file->lexer;
+  return unless $lexer;
+  my $findEnt = 0;
+  foreach my $lexeme ($lexer->lexemes()) {
+    if ($lexeme->text eq "undef" && $lexeme->token eq "Preprocessor"){
+        $findEnt = 1;
+    }elsif($findEnt && $lexeme->token eq "Identifier"){
+		my $ent = $lexeme->ent if $lexeme->ent;
+        $check->violation($ent,$file,$lexeme->line_begin,$lexeme->column_begin,ERR1); 
+        $findEnt=0;
+    }
+  }
+}

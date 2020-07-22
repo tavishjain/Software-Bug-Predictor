@@ -1,0 +1,14 @@
+<p><b>1.2.3.1. alpha.cplusplus.DeleteWithNonVirtualDtor (C++)</b><br>
+Reports destructions of polymorphic objects with a non-virtual destructor in their base class.</p>
+<p>Examples:
+<pre><div class="highlight"><pre><span></span><span class="n">NonVirtual</span> <span class="o">*</span><span class="nf">create</span><span class="p">()</span> <span class="p">{</span>
+  <span class="n">NonVirtual</span> <span class="o">*</span><span class="n">x</span> <span class="o">=</span> <span class="k">new</span> <span class="n">NVDerived</span><span class="p">();</span> <span class="c1">// note: conversion from derived to base</span>
+                                   <span class="c1">//       happened here</span>
+  <span class="k">return</span> <span class="n">x</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="nf">sink</span><span class="p">(</span><span class="n">NonVirtual</span> <span class="o">*</span><span class="n">x</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">delete</span> <span class="n">x</span><span class="p">;</span> <span class="c1">// warn: destruction of a polymorphic object with no virtual</span>
+            <span class="c1">//       destructor</span>
+<span class="p">}</span>
+</pre></div></pre></p>

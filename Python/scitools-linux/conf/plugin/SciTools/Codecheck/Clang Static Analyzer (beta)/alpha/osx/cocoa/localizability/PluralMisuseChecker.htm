@@ -1,0 +1,19 @@
+<p><b>1.2.6.5. alpha.osx.cocoa.localizability.PluralMisuseChecker (ObjC)</b><br>
+Warns against using one vs. many plural pattern in code when generating localized strings.</p>
+<p>Examples:
+<pre><div class="highlight"><pre><span></span><span class="bp">NSString</span> <span class="o">*</span><span class="n">reminderText</span> <span class="o">=</span>
+  <span class="n">NSLocalizedString</span><span class="p">(</span><span class="s">@"None"</span><span class="p">,</span> <span class="s">@"Indicates no reminders"</span><span class="p">);</span>
+<span class="k">if</span> <span class="p">(</span><span class="n">reminderCount</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+  <span class="c1">// Warning: Plural cases are not supported across all languages.</span>
+  <span class="c1">// Use a .stringsdict file instead</span>
+  <span class="n">reminderText</span> <span class="o">=</span>
+    <span class="n">NSLocalizedString</span><span class="p">(</span><span class="s">@"1 Reminder"</span><span class="p">,</span> <span class="s">@"Indicates single reminder"</span><span class="p">);</span>
+<span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">reminderCount</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="p">)</span> <span class="p">{</span>
+  <span class="c1">// Warning: Plural cases are not supported across all languages.</span>
+  <span class="c1">// Use a .stringsdict file instead</span>
+  <span class="n">reminderText</span> <span class="o">=</span>
+    <span class="p">[</span><span class="bp">NSString</span> <span class="nl">stringWithFormat</span><span class="p">:</span>
+      <span class="n">NSLocalizedString</span><span class="p">(</span><span class="s">@"%@ Reminders"</span><span class="p">,</span> <span class="s">@"Indicates multiple reminders"</span><span class="p">),</span>
+        <span class="n">reminderCount</span><span class="p">];</span>
+<span class="p">}</span>
+</pre></div></pre></p>

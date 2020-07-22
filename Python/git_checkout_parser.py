@@ -5,22 +5,22 @@ from subprocess import *
 
 try:
     import git
-    from sklearn.preprocessing import LabelEncoder
+    # from sklearn.preprocessing import LabelEncoder
     import xlrd
     import numpy as np
     import pandas as pd
 except ImportError:
-    os.system("apt install python3-pip")
+    # os.system("apt install python3-pip")
     os.system("pip3 install gitpython")
     os.system("pip3 install pandas")
     os.system("apt-get install python3-git")
     os.system("apt-get install libncurses5")
     os.system("pip3 install numpy")
-    os.system("pip3 install sklearn")
+    # os.system("pip3 install sklearn")
     os.system("pip3 install xlrd")
     import git
     import numpy as np
-    from sklearn.preprocessing import LabelEncoder
+    # from sklearn.preprocessing import LabelEncoder
     import xlrd
     import pandas as pd
 
@@ -57,6 +57,7 @@ else:
 
 parent_directory = os.getcwd()
 repo_location = str(path)
+print(repo_location)
 os.chdir(repo_location)
 
 g = git.Git(os.getcwd())

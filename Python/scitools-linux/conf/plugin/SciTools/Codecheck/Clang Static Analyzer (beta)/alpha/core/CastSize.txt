@@ -1,0 +1,1 @@
+(C) Check when casting a malloc'ed type T, whether the size is a multiple of the size of T.

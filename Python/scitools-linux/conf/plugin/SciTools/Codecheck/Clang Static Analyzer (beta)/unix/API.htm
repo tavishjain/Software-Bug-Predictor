@@ -1,0 +1,41 @@
+<p><b>1.1.7.1. unix.API (C)</b><br>
+Check calls to various UNIX/Posix functions: <code class="docutils literal notranslate"><span class="pre">open,</span> <span class="pre">pthread_once,</span> <span class="pre">calloc,</span> <span class="pre">malloc,</span> <span class="pre">realloc,</span> <span class="pre">alloca</span></code>.</p>
+<p>Examples:
+<pre><div class="highlight"><pre><span></span>
+<span class="c1">// Currently the check is performed for apple targets only.</span>
+<span class="kt">void</span> <span class="nf">test</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">path</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kt">int</span> <span class="n">fd</span> <span class="o">=</span> <span class="n">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">O_CREAT</span><span class="p">);</span>
+    <span class="c1">// warn: call to 'open' requires a third argument when the</span>
+    <span class="c1">// 'O_CREAT' flag is set</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="nf">f</span><span class="p">();</span>
+
+<span class="kt">void</span> <span class="nf">test</span><span class="p">()</span> <span class="p">{</span>
+  <span class="n">pthread_once_t</span> <span class="n">pred</span> <span class="o">=</span> <span class="p">{</span><span class="mh">0x30B1BCBA</span><span class="p">,</span> <span class="p">{</span><span class="mi">0</span><span class="p">}};</span>
+  <span class="n">pthread_once</span><span class="p">(</span><span class="o">&amp;</span><span class="n">pred</span><span class="p">,</span> <span class="n">f</span><span class="p">);</span>
+    <span class="c1">// warn: call to 'pthread_once' uses the local variable</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="nf">test</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kt">void</span> <span class="o">*</span><span class="n">p</span> <span class="o">=</span> <span class="n">malloc</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span> <span class="c1">// warn: allocation size of 0 bytes</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="nf">test</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kt">void</span> <span class="o">*</span><span class="n">p</span> <span class="o">=</span> <span class="n">calloc</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">42</span><span class="p">);</span> <span class="c1">// warn: allocation size of 0 bytes</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="nf">test</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kt">void</span> <span class="o">*</span><span class="n">p</span> <span class="o">=</span> <span class="n">malloc</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+  <span class="n">p</span> <span class="o">=</span> <span class="n">realloc</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span> <span class="c1">// warn: allocation size of 0 bytes</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="nf">test</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kt">void</span> <span class="o">*</span><span class="n">p</span> <span class="o">=</span> <span class="n">alloca</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span> <span class="c1">// warn: allocation size of 0 bytes</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="nf">test</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kt">void</span> <span class="o">*</span><span class="n">p</span> <span class="o">=</span> <span class="n">valloc</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span> <span class="c1">// warn: allocation size of 0 bytes</span>
+<span class="p">}</span>
+
+</pre></div></pre></p>

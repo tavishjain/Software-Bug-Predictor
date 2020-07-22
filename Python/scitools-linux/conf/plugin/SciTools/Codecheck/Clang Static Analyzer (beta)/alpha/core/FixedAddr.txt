@@ -1,0 +1,1 @@
+(C) Check for assignment of a fixed address to a pointer.

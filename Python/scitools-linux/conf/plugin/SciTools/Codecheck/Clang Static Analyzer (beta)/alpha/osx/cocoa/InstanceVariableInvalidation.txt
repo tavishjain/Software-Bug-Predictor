@@ -1,0 +1,1 @@
+(ObjC) Check that the invalidatable instance variables are invalidated in the methods annotated with objc_instance_variable_invalidator.

@@ -1,0 +1,92 @@
+#This script is designed to run with Understand - CodeCheck
+# Written by Blake Knudsen
+use base ("Understand::Codecheck");
+use strict;
+
+
+
+sub register_tr_text() {
+  my $check = shift;
+}
+
+sub checkID { return "MISRA12_20.11";}
+
+
+sub name { return "20.11 A macro parameter immediately following a # operator shall not immediately be followed by a ## operator";}
+
+sub description { return "20.11 (Required) A macro parameter immediately following a # operator shall not immediately be followed by a ## operator";}
+
+sub detailed_description { return <<"END_DESC"
+<p><b>Rationale</b><br>
+The order of evaluation associated with multiple #, multiple ## or a mix of # and ## preprocessor
+operators is unspecified. The use of # and ## is discouraged by Rule 20.10. In particular, the result of
+a # operator is a string literal and it is extremely unlikely that pasting this to any other preprocessing
+token will result in a valid token.<br>
+</p>
+
+<b>Example</b><br>
+<pre style="margin-top:0;padding-top:0;">
+  #define A( x ) #x           /* Compliant */
+  #define B( x, y ) x ## y    /* Compliant */
+  #define C( x, y ) #x ## y   /* Non-compliant */
+</pre>
+END_DESC
+}
+
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+sub test_entity { return 1;}
+
+sub test_global { return 0;}
+
+sub define_options {
+  my $check = shift;
+}
+
+sub check {
+  my $check = shift; 
+  my $file = shift;
+  return unless $file->kind->check("c file ~unknown ~unresolved");
+  my $lexer = $file->lexer("false");
+  my $lexeme = $lexer->first();
+
+  while ($lexeme){
+    if ($lexeme && $lexeme->token() eq "Identifier"){
+      mainCheck($lexeme, $check, $file);
+    }
+    $lexeme = $lexeme->next();
+  }
+}
+
+sub mainCheck {
+  my $lexeme = shift;
+  my $check = shift;
+  my $file = shift;
+  my $lexemePrev;
+
+  $lexemePrev = $lexeme->previous();
+  $lexeme = $lexeme->next();
+  if ($lexemePrev && $lexemePrev->token() eq "Preprocessor" && $lexemePrev->text() eq "#"){
+    while ($lexeme && $lexeme->token() eq "Whitespace"){
+      $lexeme = $lexeme->next();
+    }
+    if ($lexeme && $lexeme->token() eq "Preprocessor" && $lexeme->text() ne "#"){
+      $lexeme = $lexeme->next();
+      while ($lexeme && $lexeme->token() eq "Whitespace"){
+        $lexeme = $lexeme->next();
+      }
+    }
+    if ($lexeme && $lexeme->token() eq "Preprocessor" && $lexeme->text() eq "#"){
+        $lexeme = $lexeme->next();
+        if ($lexeme && $lexeme->token() eq "Preprocessor" && $lexeme->text() eq "#"){
+          $check->violation($file,$file,$lexeme->line_begin(),$lexeme->column_begin(),"Macro paramater immediately followed by ## operator");
+          return;
+        }
+        return;
+      }
+  }
+  
+}

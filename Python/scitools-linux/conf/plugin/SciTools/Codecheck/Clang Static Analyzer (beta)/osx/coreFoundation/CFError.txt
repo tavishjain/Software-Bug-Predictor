@@ -1,0 +1,1 @@
+(C) Check usage of CFErrorRef* parameters

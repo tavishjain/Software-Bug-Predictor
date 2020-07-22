@@ -1,0 +1,1 @@
+(ObjC) Models the APIs that are guaranteed to return a non-nil value.

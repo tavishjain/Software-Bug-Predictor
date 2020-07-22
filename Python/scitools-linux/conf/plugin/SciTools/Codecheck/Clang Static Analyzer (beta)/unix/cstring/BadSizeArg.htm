@@ -1,0 +1,9 @@
+<p><b>1.1.7.6. unix.cstring.BadSizeArg (C)</b><br>
+Check the size argument passed into C string functions for common erroneous patterns. Use <code class="docutils literal notranslate"><span class="pre">-Wno-strncat-size</span></code> compiler option to mute other <code class="docutils literal notranslate"><span class="pre">strncat</span></code>-related compiler warnings.</p>
+<p>Examples:
+<pre><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">test</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kt">char</span> <span class="n">dest</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span>
+  <span class="n">strncat</span><span class="p">(</span><span class="n">dest</span><span class="p">,</span> <span class="s">"""""""""""""""""""""""""*"</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">dest</span><span class="p">));</span>
+    <span class="c1">// warn: potential buffer overflow</span>
+<span class="p">}</span>
+</pre></div></pre></p>

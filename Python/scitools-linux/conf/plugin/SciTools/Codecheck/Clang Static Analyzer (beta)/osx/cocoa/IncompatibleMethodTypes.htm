@@ -1,0 +1,19 @@
+<p><b>1.1.8.9. osx.cocoa.IncompatibleMethodTypes (ObjC)</b><br>
+Warn about Objective-C method signatures with type incompatibilities.</p>
+<p>Examples:
+<pre><div class="highlight"><pre><span></span><span class="k">@interface</span> <span class="nc">MyClass1</span> : <span class="bp">NSObject</span>
+<span class="p">-</span> <span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nf">foo</span><span class="p">;</span>
+<span class="k">@end</span>
+
+<span class="k">@implementation</span> <span class="nc">MyClass1</span>
+<span class="p">-</span> <span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nf">foo</span> <span class="p">{</span> <span class="k">return</span> <span class="mi">1</span><span class="p">;</span> <span class="p">}</span>
+<span class="k">@end</span>
+
+<span class="k">@interface</span> <span class="nc">MyClass2</span> : <span class="nc">MyClass1</span>
+<span class="p">-</span> <span class="p">(</span><span class="kt">float</span><span class="p">)</span><span class="nf">foo</span><span class="p">;</span>
+<span class="k">@end</span>
+
+<span class="k">@implementation</span> <span class="nc">MyClass2</span>
+<span class="p">-</span> <span class="p">(</span><span class="kt">float</span><span class="p">)</span><span class="nf">foo</span> <span class="p">{</span> <span class="k">return</span> <span class="mf">1.0</span><span class="p">;</span> <span class="p">}</span> <span class="c1">// warn</span>
+<span class="k">@end</span>
+</pre></div></pre></p>

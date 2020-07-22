@@ -1,0 +1,1 @@
+(C) Checks for overlap in two buffer arguments. Applies to.

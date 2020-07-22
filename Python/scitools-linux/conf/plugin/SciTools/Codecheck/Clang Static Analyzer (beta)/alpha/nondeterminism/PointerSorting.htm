@@ -1,0 +1,9 @@
+<p><b>1.2.8.9. alpha.nondeterminism.PointerSorting (C++)</b><br>
+Check for non-determinism caused by sorting of pointers.</p>
+<p>Examples:
+<pre><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">test</span><span class="p">()</span> <span class="p">{</span>
+ <span class="kt">int</span> <span class="n">a</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+ <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span> <span class="o">*&gt;</span> <span class="n">V</span> <span class="o">=</span> <span class="p">{</span><span class="o">&amp;</span><span class="n">a</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">b</span><span class="p">};</span>
+ <span class="n">std</span><span class="o">::</span><span class="n">sort</span><span class="p">(</span><span class="n">V</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span> <span class="n">V</span><span class="p">.</span><span class="n">end</span><span class="p">());</span> <span class="c1">// warn</span>
+<span class="p">}</span>
+</pre></div></pre></p>

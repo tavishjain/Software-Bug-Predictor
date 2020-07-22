@@ -1,0 +1,1 @@
+(ObjC) Check for sending 'retain', 'release', or 'autorelease' directly to a Class.

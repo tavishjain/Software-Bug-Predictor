@@ -1,0 +1,1 @@
+(C++) Checks C++ copy and move assignment operators for self assignment.

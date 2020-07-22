@@ -1,0 +1,1 @@
+(ObjC) Check for nil pointers used as mutexes for @synchronized.

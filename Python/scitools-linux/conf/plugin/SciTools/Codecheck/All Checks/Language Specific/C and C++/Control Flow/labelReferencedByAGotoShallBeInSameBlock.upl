@@ -1,0 +1,181 @@
+#This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson
+
+# Boiler Plate code
+use base ("Understand::Codecheck");
+use strict;
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => 'Goto statement for %1 references a label not in the same block or containing block';
+
+# This registers ERR1 with Understand
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+# This is the short error the Understand will use
+
+sub checkID { return "CPP_C018";}
+
+sub name { return "Any label referenced by a goto statement shall be declared in the same block, or in a block enclosing the goto statement";}
+
+# This is the full description of the rule being tested
+sub description { return "(Required) Any label referenced by a goto statement shall be declared in the same block, or in a block enclosing the goto statement.";}
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description { return <<"END_DESC"
+<p><b>Rationale</b><br>
+Unconstrained use of <i>goto</i> can lead to programs that are extremely difficult to comprehend, analyse
+and, for C++, can also lead to the program exhibiting <i>unspecified behaviour</i>.</p>
+<p>
+However, in many cases a total ban on <i>goto</i> requires the introduction of flags to ensure correct
+control flow, and it is possible that these flags may themselves be less transparent than the <i>goto</i>
+they replace.</p>
+<p>
+Therefore, the restricted use of <i>goto</i> is allowed where that use will not lead to semantics contrary
+to developer expectations. Jumping in to nested blocks is prohibited as it may lead to complex
+flow graphs.</p>
+<br>
+<b>Example</b><pre style="margin-top:0;padding-top:0;">
+
+  void f1 ( )
+  {
+    int32_t j = 0;
+    goto L1;
+    for ( j = 0; j < 10 ; ++j )
+    {
+  L1: // Non-compliant
+      j;
+    }
+  }
+
+  void f2 ( )
+  {
+    for ( int32_t j = 0; j < 10 ; ++j )
+    {
+      for ( int32_t i = 0; i < 10; ++i )
+      {
+        goto L1;
+      }
+    }
+  L1: // Compliant
+    f1 ( );
+  }
+
+</pre>
+
+
+END_DESC
+}
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+# This determines if this script is per file
+sub test_entity { return 1;}
+
+# This determines if this script is per project or per file
+sub test_global { return 0;}
+
+# Any defined options go here
+sub define_options{
+}
+
+# Use this function to walk the funtion forward or backwards
+sub findLabel {
+
+  # Pull everything that was passed in
+  my $check = shift;
+  my $label = shift;
+  my $goto = shift;
+
+
+  # Variable needed for tracking where the label is in relationship to the goto
+  my $count = 0;
+  my $isGood = 1;
+  my $good = '';
+  my $bad = '';
+  my $switch = 'nextUseful';
+  my $caseFlag = 0;
+
+  if ( $label->line > $goto->line ) {
+
+    $good = '}';
+    $bad = '{';
+
+  } else {
+
+    $switch = 'prevUseful';
+    $good = '{';
+    $bad = '}';
+
+  }
+
+  my $lexeme = $goto->lexeme;
+
+  while ( ! ( $lexeme->line_begin == $label->line and $lexeme->text == $label->ent->name ) ) {
+
+    if ( $lexeme->text eq $bad ) {
+
+      $count++;
+
+    } elsif ( $lexeme->text eq $good ) {
+
+      $count-- if $count > 0;
+
+      # If we are at count one with a caseFlag, then we know we are leaving the end of the switch statement
+      if ( $count <= 1 and $caseFlag ) {
+        $count-- if $count > 0;
+        $caseFlag = 0;
+      }
+
+    } elsif ( ( $lexeme->token eq 'Keyword' and lc( $lexeme->text ) eq 'case' ) or ( $lexeme->token eq 'Keyword' and lc( $lexeme->text ) eq 'default' ) ) {
+
+      $count++ unless $caseFlag;
+      $caseFlag = 1;
+
+    } elsif ( $lexeme->token eq 'Keyword' and lc( $lexeme->text ) eq 'switch' ) {
+
+      $caseFlag = 0;
+
+    }
+
+    $lexeme = $lexeme->$switch;
+
+  }
+
+  $isGood = 0 if $count != 0;
+  #$isGood = 1 if $caseFlag and $count == 1;
+  return $isGood;
+
+}
+
+
+# This is the actual test being performed on the user's code
+sub check {
+
+  # Pull the name of the check and the name of the file from the incoming script request
+  my $check = shift; 
+  my $file = shift;
+  return unless $file->kind->check( 'C File' );
+
+  # Pull a list of all labels that are defined within this file
+  my @labelsDefined = $file->filerefs( 'C Define', 'C Label' );
+  return unless @labelsDefined;
+
+  foreach my $label ( @labelsDefined ) {
+
+    # Pull all of my useby references and check all
+    my @gotosDefined = $label->ent->refs( 'C Useby' );
+    foreach my $goto ( @gotosDefined ) {
+
+      my $ok = findLabel( $check, $label, $goto );
+      $check->violation( $label->ent, $label->file, $goto->line, $goto->column, ERR1, $label->ent->name ) unless $ok;
+
+    }
+  }
+}

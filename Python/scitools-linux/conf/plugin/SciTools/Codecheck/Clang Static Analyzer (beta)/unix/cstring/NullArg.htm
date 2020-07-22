@@ -1,0 +1,7 @@
+<p><b>1.1.7.7. unix.cstring.NullArg (C)</b><br>
+Check for null pointers being passed as arguments to C string functions:<code class="docutils literal notranslate"><span class="pre">strlen,</span> <span class="pre">strnlen,</span> <span class="pre">strcpy,</span> <span class="pre">strncpy,</span> <span class="pre">strcat,</span> <span class="pre">strncat,</span> <span class="pre">strcmp,</span> <span class="pre">strncmp,</span> <span class="pre">strcasecmp,</span> <span class="pre">strncasecmp</span></code>.</p>
+<p>Examples:
+<pre><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">test</span><span class="p">()</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="n">strlen</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span> <span class="c1">// warn</span>
+<span class="p">}</span>
+</pre></div></pre></p>

@@ -1,0 +1,124 @@
+# This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson
+# 11-12-14
+
+
+# Boiler Plate code
+use base ( 'Understand::Codecheck' );
+use strict;
+
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => 'Object or function %1, has more than one declaration';
+
+
+# This registers ERR1 with Understand
+sub register_tr_text {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+sub checkID { return "MISRA12_8.5";}
+
+
+
+# This is the short error the Understand will use
+sub name{
+  return '8.5 An external object or function shall be declared once in one and only one file';
+}
+
+
+# This is the full description of the rule being tested
+sub description {
+  return '8.5 (Global)( Required ) An external object or function shall be declared once in one and only one file.';
+}
+
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description {
+  return  <<"END_DESC"
+
+<p><b>Amplification</b><br>
+This rule applies to non-defining declarations only.
+</p>
+
+<p><b>Rationale</b><br>
+Typically, a single declaration will be made in a <i>header file</i> that will be included in any translation unit in
+which the identifier is defined or used. This ensures consistency between:
+</p>
+
+<p>
+• The declaration and the definition;
+</p>
+
+<p>
+• Declarations in different translation units.
+</p>
+
+<p>
+<i>Note</i>: there may be many header files in a project, but each external object or function shall only be
+declared in one header file.
+</p>
+
+<p><b>Example</b><br>
+</p>
+
+<pre style="margin-top:0;padding-top:0;">
+
+  /* featureX.h                         */
+  extern int16_t a;       /* Declare a  */
+
+  /* file.c                             */
+  #include "featureX.h"
+  int16_t a = 0;          /* Define a   */
+
+</pre>
+
+<p><b>See also</b><br>
+Rule 8.4
+</p>
+
+END_DESC
+}
+
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language eq "C++";
+}
+
+
+# This determines if this script is per file
+sub test_entity {
+  return 0;
+}
+
+
+# This determines if this script is per project or per file
+sub test_global {
+  return 1;
+}
+
+
+# Any defined options go here
+sub define_options {
+}
+
+
+# This is the actual test being performed on the user's code
+sub check {
+
+  # Pull the check and file from calling function, return unless file
+  my $check = shift;
+  my @globalsDefined = $check->db->ents( 'C Function ~Member, C Object Global ~Static' );
+  return unless @globalsDefined;
+
+  # Loop through each global object
+  foreach my $global ( @globalsDefined ) {
+
+    # Throw an error if we have more than one declare
+    my @declareRefs = $global->refs ( 'C Declarein' );
+    $check->violation( $global, $declareRefs[ 0 ]->file, $declareRefs[ 0 ]->line, $declareRefs[ 0 ]->column, ERR1, $global->name ) if 0 + @declareRefs > 1;
+  }
+}

@@ -1,0 +1,13 @@
+<p><b>1.1.4.2. nullability.NullReturnedFromNonnull (ObjC)</b><br>
+Warns when a null pointer is returned from a function that has _Nonnull return type.</p>
+<p>Examples:
+<pre><div class="highlight"><pre><span></span><span class="p">-</span> <span class="p">(</span><span class="n">nonnull</span> <span class="kt">id</span><span class="p">)</span><span class="nf">firstChild</span> <span class="p">{</span>
+  <span class="kt">id</span> <span class="n">result</span> <span class="o">=</span> <span class="nb">nil</span><span class="p">;</span>
+  <span class="k">if</span> <span class="p">([</span><span class="n">_children</span> <span class="n">count</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">_children</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+
+  <span class="c1">// Warning: nil returned from a method that is expected</span>
+  <span class="c1">// to return a non-null value</span>
+  <span class="k">return</span> <span class="n">result</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div></pre></p>

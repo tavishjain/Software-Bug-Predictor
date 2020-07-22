@@ -1,0 +1,135 @@
+#This script is designed to run with Understand - CodeCheck
+use base ("Understand::Codecheck");
+use strict;
+
+
+
+sub register_tr_text() {
+  my $check = shift;
+}
+
+sub checkID { return "MISRA12_20.13";}
+
+
+sub name { return "20.13 A line whose first token is # shall be a valid preprocessing directive";}
+
+sub description { return "20.13 (Required) A line whose first token is # shall be a valid preprocessing directive";}
+
+sub detailed_description { return <<"END_DESC"
+<p><b>Amplification</b><br>
+White-space is permitted between the # and preprocessing tokens
+</p>
+
+<p><b>Rationale</b><br>
+A preprocessor directive may be used to conditionally exclude source codeuntil a corresponding
+<i>#else, #elif</i> or <i>#endif</i> directive is encountered. A malformed or invalid preprocessing directive contained
+within the excluded source code may not be detected by the compiler, possibly leading to the exclusion
+of more code than was intended.
+</p>
+
+<p>
+Requiring all preprocessor directives to be syntactically valid, even when they occur within an excluded
+block of code, ensures that this cannot happen.
+</p>
+
+<p><b>Example</b><br>
+In the following example all the code between the <i>#ifndef</i> and <i>#endif</i> directives may be excluded if
+AAA is defined. The developer intended that AAA be assigned to x, but the #else directive was entered
+incorrectly and not diagnosed by the compiler. 
+</p>
+
+<pre style="margin-top:0;padding-top:0;">
+  #define AAA 2
+
+  int32_t foo ( void )
+  {
+    int32_t x = 0;
+
+  #ifndef AAA
+    x = 1;
+  #else1    /* Non-compliant */
+    x = AAA;
+  #endif
+
+    return x;
+  }
+
+  The following example is compliant because the text #start appearing in a comment is not a token.
+
+  /*
+  #start is not a token in a comment
+  */
+</pre>
+END_DESC
+}
+
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+sub test_entity { return 1;}
+
+sub test_global { return 0;}
+
+sub define_options {
+  my $check = shift;
+  $check->option->checkbox( 'exclusions', 'Allow GCC directives', 0 );
+}
+
+sub check {
+  my $check = shift; 
+  my $file = shift;
+  return unless $file->kind->check("c file ~unknown ~unresolved");
+
+  my %gccDirectives = ();
+  my %gccDirectives = (
+    'assert' => 1,
+    'define' => 1,
+    'elif' => 1,
+    'else' => 1,
+    'endif' => 1,
+    'error' => 1,
+    'ident' => 1,
+    'if' => 1,
+    'ifdef' => 1,
+    'ifndef' => 1,
+    'import' => 1,
+    'include' => 1,
+    'include_next' => 1,
+    'line' => 1,
+    'pragma' => 1,
+    'sccs' => 1,
+    'unassert' => 1,
+    'undef' => 1,
+    'warning' => 1,
+  ) if $check->option->lookup( 'exclusions' );;
+
+  my $line = 1;
+  my $column;
+  my $lexer = $file->lexer("false");
+  my $lexeme;
+  my $lines = $lexer->lines();
+  while ($line <= $lines){
+    $column = 0;
+    $lexeme = $lexer->lexeme($line, $column);
+    while ($lexeme && $lexeme->token() eq "Whitespace"){
+        $column ++;
+        $lexeme = $lexer->lexeme($line, $column);
+      }
+    if ($lexeme && $lexeme->token() eq "Preprocessor" && $lexeme->text() eq "#"){
+      $column ++;
+      $lexeme = $lexer->lexeme($line, $column);
+      while ($lexeme && $lexeme->token() eq "Whitespace"){
+        $column ++;
+        $lexeme = $lexer->lexeme($line, $column);
+      }
+      if ($lexeme && $lexeme->token() eq "Preprocessor" && $lexeme->text() ne "#"){
+      } elsif( exists $gccDirectives{ $lexeme->text() } ) {
+      } else {
+        $check->violation($file,$file,$line,$column,"Invalid preprocessing directive");
+      }
+    }
+    $line ++;
+  }
+}

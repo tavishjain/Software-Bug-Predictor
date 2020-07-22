@@ -1,0 +1,323 @@
+# This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson
+
+# Boiler Plate code
+use base ("Understand::Codecheck");
+use strict;
+use constant OPT1 => "Case/Default clauses with return";
+use constant OPT1RETURN=> "Return allowed";
+use constant OPT1NORETURN=> "Return not allowed";
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => 'Unconditional throw or break statement does not terminate non-empty switch-clause.';
+
+# This registers ERR1 with Understand
+sub register_tr_text() {
+  my $check = shift;
+  $check->add_tr_text( ERR1 );
+}
+
+sub checkID { return "MISRA12_16.3";}
+
+
+# This is the short error the Understand will use
+sub name { return "16.3 An unconditional break statement shall terminate every switch-clause";}
+
+# This is the full description of the rule being tested
+sub description { return "16.3 (Required) An unconditional break statement shall terminate every non-empty switch-clause.";}
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description { return <<"END_DESC"
+<p><b>Developer's Note:</b><br>
+This check is reliant upon Understand's Control Flow graph. If errors exist in the project analysis, the Control Flow graph
+may not render correctly. If this is the case, then this check may throw false positives. This check will not detect code
+that exists after a break, throw or return statement as it is normally unreachable. Unreachable code is detected by another check.
+</p>
+
+<p>
+<b>Rationale</b><br>
+If a developer fails to end a <i>switch-clause</i> with a <i>break</i> statement, then control flow “falls” into the
+following <i>switch-clause</i> or, if there is no such clause, off the end and into the statement following
+the <i>switch</i> statement. Whilst falling into a following <i>switch-clause</i> is sometimes intentional, it is often
+an error. An unterminated <i>switch-clause</i> occurring at the end of a <i>switch</i> statement may fall into any
+<i>switch-clauses</i> which are added later.
+</p>
+
+<p>
+To ensure that such errors can be detected, the last statement in every <i>switch-clause</i> shall be a
+<i>break</i> statement, or if the <i>switch-clause</i> is a compound statement, then the last statement in the
+compound statement shall be a break statement.
+</p>
+
+<p>
+Note: a <i>switch-clause</i> is defined as containing at least one statement. Two consecutive labels, <i>case</i> or
+<i>default</i>, do not have any intervening statement and are therefore permitted by this rule.
+</p>
+
+<br>
+<b>Example</b><pre style="margin-top:0;padding-top:0;">
+switch ( x )
+{
+  case 0:
+    break; /* Compliant - unconditional break */
+  case 1: /* Compliant - empty fall through allows a group */
+  case 2:
+    break; /* Compliant */
+  case 4:
+    a = b; /* Non-compliant - break omitted */
+  case 5:
+    if ( a == b )
+    {
+      ++a;
+      break; /* Non-compliant - conditional break */
+    }
+  default:
+    ; /* Non-compliant - default must also have a break */
+}
+</pre>
+END_DESC
+}
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language =~ /C\+\+/; #Handles C and C++
+}
+
+# This determines if this script is per file
+sub test_entity { return 1;}
+
+# This determines if this script is per project or per file
+sub test_global { return 0;}
+
+# Any defined options go here
+sub define_options{
+  my $check = shift;
+  $check->option->radio_vert("returnAllowed",OPT1,[OPT1RETURN,OPT1NORETURN],OPT1NORETURN);
+}
+
+
+# This is the actual test being performed on the user's code
+sub check {
+
+  # Pull the name of the check and the name of the file from the incoming script request
+  my $check = shift; 
+  my $file = shift;
+  return unless $file->kind->check("c file");
+  
+  # Pull a list of all functions that are defined within this file
+  my @funcRefs = $file->filerefs("Define", "Function");
+  return unless @funcRefs;
+
+  # This is the hard coded list for type lookup for the CGraph free text option
+  my @names = (
+    "do-while",
+    "end-do-while",
+    "case",
+    "case-when",
+    "end-case",
+    "if",
+    "elsif",
+    "else",
+    "end-if",
+    "loop",
+    "while-for",
+    "while",
+    "for",
+    "exit",
+    "exit-when",
+    "end-loop",
+    "select",
+    "select-or",
+    "select-else",
+    "select-then-abort",
+    "end-select",
+    "switch",
+    "switch-case",
+    "switch-default",
+    "end-switch",
+    "question-begin",
+    "question-colon",
+    "end-question",
+    "goto",
+    "raise",
+    "return",
+    "terminate",
+    "break",
+    "continue",
+    "throw",
+    "passive",
+    "passive-implicit",
+    "java-block-begin",
+    "end-java-block",
+    "ada-block-begin",
+    "ada-accept-block-begin",
+    "exception-when",
+    "end-ada-block",
+    "try",
+    "try-catch",
+    "end-try",
+    "fortran-arith-if",
+    "fortran-select-case",
+    "fortran-case",
+    "fortran-case-default",
+    "fortran-end-select",
+    "fortran-where",
+    "fortran-else-where",
+    "fortran-end-where",
+    "fortran-do",
+    "fortran-do-infinite",
+    "fortran-do-while",
+    "fortran-end-do",
+    "fortran-until",
+    "fortran-loop-expr",
+    "fortran-assigned-goto",
+    "fortran-computed-goto",
+    "fortran-cycle",
+    "fortran-stop",
+    "fortran-exit-do",
+    "fortran-exit-for",
+    "fortran-exit-if",
+    "fortran-exit-loop",
+    "fortran-exit-while",
+    "fortran-exit-do-if",
+    "fortran-exit-for-if",
+    "fortran-exit-if-if",
+    "fortran-exit-loop-if",
+    "fortran-exit-while-if",
+    "end-routine",
+    "repeat-until",
+    "end-repeat-until",
+    "try-finally",
+    "deferred-break",
+    "deferred-continue",
+    "deferred-goto",
+    "deferred-return",
+    "deferred-throw",
+    "with-do",
+    "end-with-do",
+    "fortran-else-where-cond",
+    "while-for-else",
+    "try-else",
+    "fortran-io-control",
+    "next",
+    "next-when",
+    "case-fallthru",
+    "jovial3-goto",
+    "basic-do",
+    "basic-do-until",
+    "basic-do-while",
+    "basic-end-do-loop",
+    "basic-end-do-loop-until",
+    "basic-end-do-loop-while",
+    "basic-exit-do",
+    "basic-exit-for",
+    "basic-exit-select",
+    "basic-exit-try",
+    "basic-exit-while",
+    "basic-continue-do",
+    "basic-continue-for",
+    "basic-continue-while",
+    "fortran-call-alt-return",
+    "conditional-goto"
+  );
+  
+  # Loop through all functions
+  FUNC:foreach my $funcRef (@funcRefs){
+
+    my $func = $funcRef->ent;
+    next FUNC unless $func->freetext("CGraph");
+    my @nodes = ();
+    my $id=1;
+
+    # Loop through all nodes withing this function and create our data structure
+    foreach my $fields (split(";", $func->freetext("CGraph"))) {
+      my %node = {};
+      my @parents = ();
+      ($node{kind}, $node{sline}, $node{scol}, $node{eline}, $node{ecol},
+       $node{endstr}, my @children) = split(",", $fields);
+      $node{id} = $id++;
+      $node{fields} = $fields;
+      $node{parents} = \@parents;
+      $node{children} = \@children;
+      push(@nodes, \%node);
+    }
+
+    # connect nodes of the data structures
+    my $start = $nodes[0];
+    my $end = $nodes[-1];
+    foreach my $node (@nodes) {
+      my @children = ();
+      foreach my $id (@{$node->{children}}) {
+        my $child = $nodes[$id - 1];
+        push(@{$child->{parents}}, $node);
+        push(@children, $child);
+      }
+      $node->{children} = \@children;
+    }
+
+    # Test all nodes for switch cases and switch default statements
+    foreach my $node(@nodes){
+      my $kind = $node->{kind};
+      if ( @names[$kind] eq "switch-case" or @names[$kind] eq "switch-default" ) {
+        foreach my $child (@{$node->{children}}) {
+          my $line = $node->{sline};
+          my $column = $node->{scol};
+          my @visited = ();
+          testCase( $check, $funcRef, $file, $line, $column, $node, $child, \@names, \@visited );
+        }
+      }
+    }
+  }
+}
+
+# This function walks the switch case statements to ensure they end in a break or throw command
+sub testCase {
+  my $check = shift;
+  my $funcRef = shift;
+  my $file = shift;
+  my $line = shift;
+  my $column = shift;
+  my $parent = shift;
+  my $node = shift;
+  my $namesRef = shift;
+  my @names = @{ $namesRef };
+  my $visitedRef = shift;
+  my @visited = @{ $visitedRef };
+  my $kind = $node->{kind};
+  my $canReturn = $check->option->lookup("returnAllowed") eq OPT1RETURN;
+
+  #$check->violation( $funcRef->ent, $file, $line, $column, @names[$kind] );
+
+  return if @names[$kind] eq "break";
+  return if @names[$kind] eq "throw";
+  return if $canReturn and @names[$kind] eq "return";
+  if ( @names[$kind] eq "switch-case" or @names[$kind] eq "switch-default" or @names[$kind] eq "end-switch" ) {
+    $check->violation( $funcRef->ent, $file, $line, $column, ERR1 );
+    return;  
+  }
+
+  # Flag this node as being visited, prevents circular references from crashing Understand.
+  if ( @visited[ $node->{id} ] ) {
+    return;
+  } else {
+    @visited[ $node->{id} ] = 1;
+  }
+
+  my @children = @{$node->{children}};
+  if ( @children ) {
+    foreach my $child ( @children ) {
+
+      # This is a special case for return statements. Return statements have children until the end of the function which throws off the line and column tracking
+      unless ( @names[$parent->{kind}] eq "return" ) {
+        $line = $parent->{sline} != 0 ? $parent->{sline} : $line;
+        $column = $parent->{scol} != 0 ? $parent->{scol} : $column;
+      }
+      
+      return testCase( $check, $funcRef, $file, $line, $column, $node, $child, \@names, \@visited );
+    }  
+  } else {
+    $check->violation( $funcRef->ent, $file, $line, $column, ERR1 );
+    return;
+  }
+}

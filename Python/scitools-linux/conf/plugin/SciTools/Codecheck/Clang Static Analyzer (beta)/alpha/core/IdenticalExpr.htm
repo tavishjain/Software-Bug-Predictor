@@ -1,0 +1,25 @@
+<p><b>1.2.2.7. alpha.core.IdenticalExpr (C, C++)</b><br>
+Warn about unintended use of identical expressions in operators.</p>
+<p>Examples:
+<pre><div class="highlight"><pre><span></span><span class="c1">// C</span>
+<span class="kt">void</span> <span class="nf">test</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kt">int</span> <span class="n">a</span> <span class="o">=</span> <span class="mi">5</span><span class="p">;</span>
+  <span class="kt">int</span> <span class="n">b</span> <span class="o">=</span> <span class="n">a</span> <span class="o">|</span> <span class="mi">4</span> <span class="o">|</span> <span class="n">a</span><span class="p">;</span> <span class="c1">// warn: identical expr on both sides</span>
+<span class="p">}</span>
+
+<span class="c1">// C++</span>
+<span class="kt">bool</span> <span class="nf">f</span><span class="p">(</span><span class="kt">void</span><span class="p">);</span>
+
+<span class="kt">void</span> <span class="nf">test</span><span class="p">(</span><span class="kt">bool</span> <span class="n">b</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">f</span><span class="p">())</span> <span class="p">{</span> <span class="c1">// warn: true and false branches are identical</span>
+    <span class="k">do</span> <span class="p">{</span>
+      <span class="n">i</span><span class="o">--</span><span class="p">;</span>
+    <span class="p">}</span> <span class="k">while</span> <span class="p">(</span><span class="n">f</span><span class="p">());</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="k">do</span> <span class="p">{</span>
+      <span class="n">i</span><span class="o">--</span><span class="p">;</span>
+    <span class="p">}</span> <span class="k">while</span> <span class="p">(</span><span class="n">f</span><span class="p">());</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</pre></div></pre></p>

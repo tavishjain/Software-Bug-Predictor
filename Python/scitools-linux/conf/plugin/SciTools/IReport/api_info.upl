@@ -1,0 +1,264 @@
+#
+# options
+#
+use strict;
+my $filter = "";
+
+#
+# globals
+#
+
+my $kind ="";
+
+
+#
+# overrides
+#
+
+use base ("Understand::IReport");
+
+sub name { return "API Info"; }
+
+sub test_entity {
+  my $entity = shift;
+  return 1;
+}
+
+sub test_architecture { return 1; }
+
+sub test_global { return 0; }
+
+sub init {}
+
+  
+sub generate {
+  my $report = shift;
+  my $ent = shift;
+  my $arch = shift;
+  my @freetextOptions = ("AllowExceptions","InitValue","Inline","Parameters","Priority","ThrowExceptions",
+        "AttrArrayComponentSize","AttrArrayIndexRanges","AttrComponentFirstBit","AttrComponentLastBit",
+        "AttrComponentPosition","AttrRecordAlignment","AttrTypeSize","InterruptPriority","Bitfield","CGraph","Linkage","DefinedInMacro");
+        
+  #Output Architecture Information
+  if ($arch){
+    $report->print("Architecture Information as reported by the API");
+    $report->tree(1,1);
+    treeTitle($report,$arch->name,1);
+    $report->tree(2,1);
+    printLine($report,2,"name",$arch->name());
+    printLine($report,2,"longname",$arch->longname());
+    printEntLine($report,2,"parent",$arch->parent());
+    
+    #children
+    my @children = $arch->children();
+    if (@children){
+      treeTitle($report,"children (".scalar(@children).")",2);
+      $report->tree(3,0);
+      foreach my $subent (sort{$a->name cmp $b->name;}@children){
+        printLine($report,3,"child",$subent->name());
+      }
+    }
+    
+    #ents
+    my @ents = $arch->ents();
+    if ($arch->ents("")){
+      treeTitle($report,"ents(".scalar(@ents).")",2);
+      $report->tree(3,0);
+      foreach my $subent (sort{$a->longname cmp $b->longname;} @ents){
+        printEntLine($report,3,"ent",$subent);
+      }
+    }
+    
+    printDependencyTree($report,$arch,2,0);
+    printDependencyTree($report,$arch,2,1);
+    
+    #Print Metrics Tree
+    my @metrics = $arch->metrics();
+    if (@metrics){
+      treeTitle($report,"Metrics");
+      $report->tree(3,0);
+      foreach my $met (@metrics){
+        printLine($report,3,$met,$arch->metric($met));
+      }
+    }
+  }  
+       
+
+  #Output Entity Information
+  if ($ent){
+    $report->print("Entity Information as reported by the API");
+    $report->tree(1,1);
+    treeTitle($report,$ent->name,1);
+    
+    #Print Comments
+    treeTitle($report,"comments");
+    $report->tree(3,0);
+    printLine($report,3,"comments(\"before\")",$ent->comments("before"));
+    printLine($report,3,"comments(\"after\")",$ent->comments("after"));
+    
+    #Contents
+    treeTitle($report,"contents");
+    $report->tree(3,0);
+    printLine($report,3,"contents",$ent->contents());
+    
+
+    printDependencyTree($report,$ent,2,0);
+    printDependencyTree($report,$ent,2,1);
+    
+    #ents
+    if ($ent->ents("")){
+      treeTitle($report,"ents",2);
+      $report->tree(3,0);
+      foreach my $subent (sort{$a->longname cmp $b->longname;}$ent->ents("")){
+        printEntLine($report,3,"ent",$subent);
+      }
+    }
+    
+    #ext name - undocumented
+    printLine($report,2,"extname",$ent->extname);
+    
+    
+    #freetext options are currently undocumented
+    foreach my $opt (@freetextOptions){
+      printLine($report,2,"freetext(\"$opt\")",$ent->freetext($opt));
+    }
+    printLine($report,2,"id",$ent->id);
+    printLine($report,2,"kindname",$ent->kindname);
+    printLine($report,2,"kind->longname",$ent->kind->longname);
+    printLine($report,2,"language",$ent->language);
+    printLine($report,2,"library",$ent->library);
+    printLine($report,2,"longname",$ent->longname);
+      #Print Metrics Tree
+    my @metrics = $ent->metrics();
+    if (@metrics){
+      treeTitle($report,"Metrics");
+      $report->tree(3,0);
+      foreach my $met (@metrics){
+        printLine($report,3,$met,$ent->metric($met),1); # 1 to show description of metric
+      }
+    }
+    printLine($report,2,"name",$ent->name);
+    my $params =  join(',',$ent->parameters());
+    printLine($report,2,"parameters(1)",$params);
+    printLine($report,2,"parent",$ent->parent()->longname) if $ent->parent;
+    printLine($report,2,"parsetime",$ent->parsetime());
+    #References
+    my @refs = $ent->refs(); #Right now this returns ALL references 
+    if (@refs){
+      treeTitle($report,"refs",2);
+        $report->tree(3,0);
+      foreach my $ref (sort{$a->file->name.$a->line cmp $b->file->name.$b->line;} @refs){
+        #next if $ref->file->library;
+        $report->tree(3);
+        $report->syncfile($ref->file,$ref->line,$ref->column);
+        $report->print ($ref->file->name." (".$ref->line.") ".$ref->kind->longname);
+        $report->syncfile;
+        $report->tree(4,0);
+        printLine($report,4,"kind->longname",$ref->kind->longname);
+        printEntLine($report,4,"ent->name",$ref->ent);
+        printEntLine($report,4,"scope->name",$ref->scope);
+        printLine($report,4,"file->longname",$ref->file->longname);
+        printLine($report,4,"line",$ref->line);
+        printLine($report,4,"column",$ref->column);
+        if ($ent->kind->check("c macro") && $ref->kind->check("useby ~inactive")){
+          my $lexer = $ref->file->lexer(0,8,1,1);
+          next unless $lexer;
+          my $lexeme = $lexer->lexeme($ref->line, $ref->column);
+          my $string;
+          while ($lexeme && $lexeme->line_begin() == $ref->line && $lexeme->column_begin == $ref->column){
+            $string .= $lexeme->text;
+            $lexeme=$lexeme->next;
+          }
+          printLine($report,4,"Macro Expansion",$string);
+        }
+      }
+    }
+    printLine($report,2,"relname",$ent->relname);
+    printLine($report,2,"simplename",$ent->simplename);
+    printLine($report,2,"type",$ent->type);
+    printLine($report,2,"uniquename",$ent->uniquename());
+    printLine($report,2,"value",$ent->value);
+    $report->tree;
+  }
+    $report->print("\n");
+}  
+
+sub printDependencyTree(){
+    my($report,$ent,$level,$dependsby) = @_;
+    #Depends
+    my $deps;
+    if($dependsby){
+      $deps = $ent->dependsby();
+      treeTitle($report,"dependsby(".scalar($deps->keys()).")",$level) if $deps;
+    }else{
+      $deps = $ent->depends();
+      treeTitle($report,"depends(".scalar($deps->keys()).")",$level) if $deps;
+    }
+    if ($deps && $deps < 250){
+      my @depEnts = $deps->keys();
+      $report->tree($level+1,0);
+      foreach my $depent(sort{$a->longname cmp $b->longname;} @depEnts){
+        $report->tree($level+1);
+        $report->entity($depent);
+        $report->print($depent->longname . "(".$deps->value($depent).")");
+        $report->entity();
+        foreach my $ref ($deps->value($depent)){
+          next if $ref->file->library;
+          $report->tree($level+2);
+          $report->syncfile($ref->file,$ref->line,$ref->column);
+          $report->print ($ref->file->name." (".$ref->line.") ".$ref->kind->longname);
+          $report->syncfile;
+          $report->tree($level+3,0);
+          printLine($report,$level+3,"kind->longname",$ref->kind->longname);
+          printEntLine($report,$level+3,"ent->name",$ref->ent);
+          printEntLine($report,$level+3,"scope->name",$ref->scope);
+          printLine($report,$level+3,"file->longname",$ref->file->longname);
+          printLine($report,$level+3,"line",$ref->line);
+          printLine($report,$level+3,"column",$ref->column);
+        }
+      }
+    }
+
+}
+
+sub printLine(){
+  my $report = shift;
+  my $depth = shift;
+  my $title = shift;
+  my @text = shift;
+  my $description = shift;
+  return if "@text" =~/^\s*$/;
+  $report->tree($depth);
+  $report->bold;
+  if ($description) {
+    $report->hover(Understand::Metric::description($title));
+  }
+  $report->print($title.": ");
+  if ($description) {
+    $report->hover();
+  }
+  $report->nobold;
+  $report->print(@text);
+}
+
+sub printEntLine(){
+  my ($report,$depth,$title,$ent) = @_;
+  return unless $ent;
+  $report->tree($depth);
+  $report->bold;
+  $report->print($title.": ");
+  $report->nobold;
+  $report->entity($ent);
+  $report->print($ent->name);
+  $report->entity();
+}
+
+sub treeTitle(){
+  my ($report,$title,$depth) = @_;
+  return unless $title;
+  $depth = 2 unless $depth;
+  $report->tree($depth,1);
+  $report->bold;
+  $report->print($title);
+  $report->nobold;
+  } 

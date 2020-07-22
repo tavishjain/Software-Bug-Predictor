@@ -1,0 +1,197 @@
+#This script is designed to run with Understand - CodeCheck
+# Written by Kyle Jackson
+# 10-9-14
+
+
+# Boiler Plate code
+use base ("Understand::Codecheck");
+use strict;
+
+
+# This is the error that will be returned when a violation is found
+use constant ERR1 => "Non unique typedef identifier %1 conflicts with entity %2 in file %3 on line %4";
+
+
+# This registers ERR1 with Understand
+sub register_tr_text {
+  my $check = shift;
+  $check->add_tr_text(ERR1);
+}
+
+sub checkID { return "MISRA12_5.6";}
+
+
+
+# This is the short error the Understand will use
+sub name{
+  return '5.6 A typedef name shall be a unique identifier';
+}
+
+
+# This is the full description of the rule being tested
+sub description {
+  return "5.6 (Global)( Required ) A typedef name shall be a unique identifier.";
+}
+
+
+# This section returns the rational and examples to be given to the user through Understand
+sub detailed_description {
+  return  <<"END_DESC"
+
+<p><b>Amplification</b><br>
+A typedef name shall be unique across all name spaces and translation units. Multiple declarations of
+the same typedef name are only permitted by this rule if the type definition is made in a header file and
+that header file is included in multiple source files.
+</p>
+
+<p><b>Rationale</b><br>
+Reusing a typedef name either as another typedef name or as the name of a function, object or
+enumeration constant, may lead to developer confusion.
+</p>
+
+<p><b>Exception</b><br>
+The typedef name may be the same as the structure, union or enumeration tag name associated with
+the typedef.
+</p>
+
+<p><b>Example</b><br>
+</p>
+
+<pre style="margin-top:0;padding-top:0;">
+
+  void func ( void )
+  {
+    {
+      typedef unsigned char u8_t;
+    }
+    {
+      typedef unsigned char u8_t;   /* Non-compliant - reuse */
+    }
+  }
+
+  typedef float mass;
+
+  void func1 ( void )
+  {
+    float32_t mass = 0.0f;          /* Non-compliant - reuse */
+  }
+
+  typedef struct list
+  {
+    struct list *next;
+    uint16_t element;
+  } list;                           /* Compliant - exception */
+
+  typedef struct
+  {
+    struct chain
+    {
+      struct chain *list;
+      uint16_t element;
+    } s1;
+    uint16_t length;
+  } chain;                          /* Non-compliant - tag "chain" not
+                                     * associated with typedef */
+
+</pre>
+
+<p><b>See also</b><br>
+Rule 5.7
+</p>
+
+END_DESC
+}
+
+
+# This section defines the programming language this script is testing
+sub test_language {
+  my $language = shift;
+  return $language eq "C++";
+}
+
+
+# This determines if this script is per file
+sub test_entity {
+  return 0;
+}
+
+
+# This determines if this script is per project or per file
+sub test_global {
+  return 1;
+}
+
+
+# Any defined options go here
+sub define_options{
+}
+
+
+# This is the actual test being performed on the user's code
+sub check {
+
+  # Pull the check from understand, retrieve our global entities from the database and check our options
+  my $check = shift;
+  my @typedefsDefined = $check->db->ents( 'Typedef' );
+
+  # Start my hash for tracking patterns
+  my %patternsSeen = ();
+
+  foreach my $typedef ( @typedefsDefined ) {
+
+    # Pull references
+    my @defineRefs = $typedef->refs ( 'Definein, Declarein' );
+    next unless @defineRefs;
+
+    # If we have more than one define or declare reference, that is an error
+    if ( 0+@defineRefs > 1 ) {
+
+      for ( my $i = 1; $i < 0+@defineRefs; $i++ ) {
+
+        $check->violation( $typedef, @defineRefs[0]->file, @defineRefs[0]->line, @defineRefs[0]->column, 
+                           ERR1, $typedef->name, @defineRefs[$i]->scope->name, @defineRefs[$i]->file->name, @defineRefs[$i]->line );        
+
+      }
+    }
+
+    # We need a define or a declare reference, don't care which one so we just take the first one
+    my $define = @defineRefs[0];
+    next unless $define;
+
+    # Test if we have seen a typedef with the same name
+    if ( exists $patternsSeen{ $define->scope->name } ) {
+
+      # We've seen this name before, throw error
+      my $seenName = $patternsSeen{ $define->scope->name };
+      $check->violation( $typedef, $define->file, $define->line, $define->column, 
+                         ERR1, $typedef->name, $seenName->scope->name, $seenName->file->name, $seenName->line );
+
+    # Put this typedef into the hash for comparison later
+    } else {
+      $patternsSeen{ $define->scope->name } = $define;
+    }
+  }
+
+  my @everythingElse = $check->db->ents ( '~Typedef' );
+
+  ENT : foreach my $other ( @everythingElse ) {
+    next ENT unless $other;
+
+    # We need a define or a declare reference, don't care which one so we just take the first one
+    my $define = $other->ref ( 'Definein, Declarein' );
+    next ENT unless $define;
+
+    if ( exists $patternsSeen{ $define->scope->name } ) {
+
+      # Test to make sure this isn't a tage name
+      my $seenReference = $patternsSeen{ $define->scope->name };
+      my $typedReference = $seenReference->scope->ref ( 'Typed' );
+      next ENT if $typedReference and $typedReference->ent->longname eq $define->scope->longname;
+
+      # If we have made it this far, it is a violation
+      $check->violation( $other, $define->file, $define->line, $define->column, 
+                         ERR1, $other->name, $seenReference->scope->name, $seenReference->file->name, $seenReference->line );
+
+    }
+  }
+}

@@ -1,0 +1,8 @@
+<p><b>1.1.1.11. core.uninitialized.CapturedBlockVariable (C)</b><br>
+Check for blocks that capture uninitialized values.</p>
+<p>Examples:
+<pre><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">test</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kt">int</span> <span class="n">x</span><span class="p">;</span>
+  <span class="o">^</span><span class="p">{</span> <span class="kt">int</span> <span class="n">y</span> <span class="o">=</span> <span class="n">x</span><span class="p">;</span> <span class="p">}();</span> <span class="c1">// warn</span>
+<span class="p">}</span>
+</pre></div></pre></p>

@@ -1,0 +1,25 @@
+<p><b>1.2.7.6. alpha.security.taint.TaintPropagation (C, C++)</b><br>
+Generate taint information used by other checkers. A data is tainted when it comes from an unreliable source.</p>
+<p>Examples:
+<pre><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">test</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kt">char</span> <span class="n">x</span> <span class="o">=</span> <span class="n">getchar</span><span class="p">();</span> <span class="c1">// 'x' marked as tainted</span>
+  <span class="n">system</span><span class="p">(</span><span class="o">&amp;</span><span class="n">x</span><span class="p">);</span> <span class="c1">// warn: untrusted data is passed to a system call</span>
+<span class="p">}</span>
+
+<span class="c1">// note: compiler internally checks if the second param to</span>
+<span class="c1">// sprintf is a string literal or not.</span>
+<span class="c1">// Use -Wno-format-security to suppress compiler warning.</span>
+<span class="kt">void</span> <span class="nf">test</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kt">char</span> <span class="n">s</span><span class="p">[</span><span class="mi">10</span><span class="p">],</span> <span class="n">buf</span><span class="p">[</span><span class="mi">10</span><span class="p">];</span>
+  <span class="n">fscanf</span><span class="p">(</span><span class="n">stdin</span><span class="p">,</span> <span class="s">"%s"</span><span class="p">,</span> <span class="n">s</span><span class="p">);</span> <span class="c1">// 's' marked as tainted</span>
+
+  <span class="n">sprintf</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="n">s</span><span class="p">);</span> <span class="c1">// warn: untrusted data as a format string</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="nf">test</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kt">size_t</span> <span class="n">ts</span><span class="p">;</span>
+  <span class="n">scanf</span><span class="p">(</span><span class="s">"%zd"</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">ts</span><span class="p">);</span> <span class="c1">// 'ts' marked as tainted</span>
+  <span class="kt">int</span> <span class="o">*</span><span class="n">p</span> <span class="o">=</span> <span class="p">(</span><span class="kt">int</span> <span class="o">*</span><span class="p">)</span><span class="n">malloc</span><span class="p">(</span><span class="n">ts</span> <span class="o">*</span> <span class="k">sizeof</span><span class="p">(</span><span class="kt">int</span><span class="p">));</span>
+    <span class="c1">// warn: untrusted data as buffer size</span>
+<span class="p">}</span>
+</pre></div></pre></p>

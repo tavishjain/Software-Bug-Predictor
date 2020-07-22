@@ -1,0 +1,1 @@
+(C++) Method calls on a moved-from object and copying a moved-from object will be reported.
