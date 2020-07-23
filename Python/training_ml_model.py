@@ -18,12 +18,19 @@ import scipy
 #     os.system("pip3 install numpy")
 #     os.system("pip3 install sklearn")
 #     os.system("pip3 install xlrd")
-import pygit
+if os.name == 'nt':
+	import pygit
+else:
+	import git
 import openpyxl
 from sklearn.preprocessing import LabelEncoder
 from sklearn.ensemble import RandomForestRegressor
+from sklearn.preprocessing import MinMaxScaler
 import xlrd
 import pandas as pd
+
+import math
+import matplotlib.pyplot as plt
 
 parser  =   optparse.OptionParser()
 
@@ -46,6 +53,13 @@ results_dir = parent_directory + '/logs/results'
 training_data_file_name = path.split('/')[-1] + '_training_data.xlsx'
 testing_data_file_name = path.split('/')[-1] + '_testing_data.xlsx'
 result_file_name = path.split('/')[-1] + '_result.xlsx'
+
+summing_df = pd.read_excel(training_dir + '/' + training_data_file_name)
+summing_df = summing_df[['Name', 'Bug_present']]
+summing_df = summing_df.groupby(['Name'], as_index = False).sum()
+# print(summing_df['Bug_present'].values)
+# print(type(summing_df['Bug_present'].values))
+
 
 data = pd.read_excel(training_dir + '/' + training_data_file_name) 
 
@@ -86,9 +100,42 @@ colone = encoder.inverse_transform(test_data['Name']).reshape(-1, 1)
 coltwo = predictions.reshape(-1, 1)
 
 final_data = np.hstack((colone, coltwo))
-print(final_data.shape)
-print(final_data)
 final_data = pd.DataFrame(final_data, columns = ['File_Name', 'Probability'])
+# print(summing_df['Bug_present'].shape)
+final_data['Probability'] = pd.to_numeric(final_data['Probability'], errors='coerce')
+scaler = MinMaxScaler()
+final_data['Relative_Probability'] = final_data['Probability']
+final_data[['Relative_Probability']] = scaler.fit_transform(final_data[['Relative_Probability']])
+final_data['Probability'] = final_data['Probability'].apply(lambda x:round(x, 2))
+final_data['Relative_Probability'] = final_data['Relative_Probability'].apply(lambda x:round(x, 2))
+final_data['Bugs_count'] = summing_df['Bug_present']#.values.tolist()
+print(final_data)
 final_data.to_excel(results_dir + '/' + result_file_name)
+
+# plt.xlabel('File_Name')
+# plt.ylabel('Values')
+# # plt.legend(['b', 'g', 'r'])
+# plt.plot(final_data['File_Name'], final_data['Probability'], 'b', label="Probability")
+# plt.plot(final_data['File_Name'], final_data['Relative_Probability'], 'g', label="Relative Probability")
+# plt.plot(final_data['File_Name'], final_data['Bugs_count'], 'r', label="Bugs Count")
+# plt.legend(loc="upper right")
+# plt.show()
+
+# final_data.Probability.plot(label='Probability', legend=True);
+# # final_data.Relative_Probability.plot(label='Relative Probability', legend=True)
+# final_data.Bugs_count.plot(secondary_y=True, label='Bugs Count', legend=True)
+# # plt.show()
+# plt.savefig(results_dir + '/' + path.split('/')[-1] + '_' + 'countVSprobability.png')
+
+# final_data.Relative_Probability.plot(label='Relative Probability', legend=True)
+# final_data.Bugs_count.plot(secondary_y=True, label='Bugs Count', legend=True)
+# # plt.show()
+# plt.savefig(results_dir + '/' + path.split('/')[-1] + '_' + 'countVSrelative_probability.png')
+
+final_data.Probability.plot(label='Probability', legend=True);
+final_data.Relative_Probability.plot(label='Relative Probability', legend=True)
+final_data.Bugs_count.plot(secondary_y=True, label='Bugs Count', legend=True)
+# plt.show()
+plt.savefig(results_dir + '/' + path.split('/')[-1] + '_' + 'complete.png')
 
 print(result_file_name)

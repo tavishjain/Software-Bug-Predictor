@@ -143,7 +143,7 @@ for i in range(len(df['Commit_Hash'])):
 	final_data = final_data.append(temp_df)
 	print('Final Data after append: ', final_data.shape)
 	print('Temp DF: ', temp_df.shape)
-	print('Done with Commit:', i, 'out of total:', total_num_of_commits)
+	print('Done with Commit:', (i+1), 'out of total:', total_num_of_commits)
 	final_data.to_excel(training_dir + '/' + training_data_file_name)
 
 	if i == len(df['Commit_Hash'])-1:
